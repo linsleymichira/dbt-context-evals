@@ -1,6 +1,6 @@
 <!--
 Sync Impact Report
-- Version change: unversioned template → 1.0.1
+- Version change: unversioned template → 1.1.0
 - Principles defined (all new): I. The Rubric Is the Standard, II. Baseline and Diffable History, III. Score What dbt Resolves, IV. Code Scores, the Model Judges, V. Smallest Harness That Works
 - Added sections: Evaluation Constraints, Evaluation Workflow, Governance
 - Removed sections: none
@@ -61,4 +61,4 @@ Rationale: the project tests description quality, not infrastructure.
 
 This constitution takes precedence over other workflow guidance in this repo. `CLAUDE.md` holds runtime development guidance and MUST NOT contradict it. Amendments are made through `/speckit-constitution`, recorded in the Sync Impact Report at the top of this file, and versioned by semantic versioning: MAJOR for removing or redefining a principle, MINOR for adding a principle or materially expanding one, PATCH for wording. Every spec and plan MUST be checked against Principles I through V before implementation starts.
 
-**Version**: 1.0.1 | **Ratified**: 2026-10-06 | **Last Amended**: 2026-10-06
+**Version**: 1.1.0 | **Ratified**: 2026-10-06 | **Last Amended**: 2026-10-06
