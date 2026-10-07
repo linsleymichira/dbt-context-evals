@@ -1,11 +1,12 @@
 <!--
 Sync Impact Report
-- Version change: unversioned template → 1.0.0
+- Version change: unversioned template → 1.0.1
 - Principles defined (all new): I. The Rubric Is the Standard, II. Baseline and Diffable History, III. Score What dbt Resolves, IV. Code Scores, the Model Judges, V. Smallest Harness That Works
 - Added sections: Evaluation Constraints, Evaluation Workflow, Governance
 - Removed sections: none
 - Templates: plan-template.md, spec-template.md and tasks-template.md were not modified (they read this file at runtime)
 - Deferred TODOs: none. All five principles are inferred from rubric.md, CLAUDE.md and the baseline commit e68d4c3, not from explicit user input. Review them before the first /speckit-specify.
+- Amendment: bounded workflow rounds now rewrite exactly one description, preserving Principle II's one-rewrite-per-commit rule.
 -->
 
 # dbt-context-evals Constitution
@@ -52,7 +53,7 @@ Rationale: the project tests description quality, not infrastructure.
 ## Evaluation Workflow
 
 1. Score the baseline commit and record the result.
-2. Rewrite descriptions in one bounded round, then commit it.
+2. Rewrite exactly one description in one bounded round, then commit that rewrite.
 3. Run `dbt build` and `dbt parse` and confirm both pass.
 4. Re-score against the new commit and compare to the prior score per column and per rubric part.
 
@@ -60,4 +61,4 @@ Rationale: the project tests description quality, not infrastructure.
 
 This constitution takes precedence over other workflow guidance in this repo. `CLAUDE.md` holds runtime development guidance and MUST NOT contradict it. Amendments are made through `/speckit-constitution`, recorded in the Sync Impact Report at the top of this file, and versioned by semantic versioning: MAJOR for removing or redefining a principle, MINOR for adding a principle or materially expanding one, PATCH for wording. Every spec and plan MUST be checked against Principles I through V before implementation starts.
 
-**Version**: 1.0.0 | **Ratified**: 2026-10-06 | **Last Amended**: 2026-10-06
+**Version**: 1.0.1 | **Ratified**: 2026-10-06 | **Last Amended**: 2026-10-06
