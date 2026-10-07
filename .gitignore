@@ -1,0 +1,5 @@
+.venv/
+jaffle-shop/
+.env
+__pycache__/
+*.duckdb
