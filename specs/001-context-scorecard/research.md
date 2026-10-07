@@ -47,7 +47,7 @@ All decisions dated 2026-10-07. No NEEDS CLARIFICATION items remain.
 
 ## R7. Report naming and determinism (FR-005, FR-011, SC-004, SC-005)
 
-- **Decision**: `results/<short-sha>.md`, with `-dirty` appended when `git status --porcelain` shows changes under `jaffle-shop/models/` or in `rubric.md`. No timestamps, durations, absolute paths or dict-order-dependent output. Rows sort by model, then column.
+- **Decision**: `results/<short-sha>.md`, with `-dirty` appended when `git status --porcelain` shows any change outside `results/`, because edits to descriptions, the rubric or `score_context.py` all change the grades. No timestamps, durations, absolute paths or dict-order-dependent output. Rows sort by model, then column.
 - **Rationale**: byte-identical reruns are the test for SC-004. A dirty suffix stops a number being credited to a commit that lacks the text it graded.
 - **Alternatives considered**: timestamped filenames (break determinism and clutter `results/`).
 

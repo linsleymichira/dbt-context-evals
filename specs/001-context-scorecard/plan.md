@@ -35,7 +35,7 @@ One command refreshes the dbt project, reads the resolved column descriptions an
 |Principle|Check|Status|
 |---|---|---|
 |I. The Rubric Is the Standard|Each rule reads its part's sentence from `rubric.md` at runtime and prints it beside the rule summary (FR-003). The scorecard exits on any remaining `<!-- YOU WRITE` marker (FR-010). Rule bodies are written only after the user writes the sentences and approves each rule.|Pass|
-|II. Baseline and Diffable History|Report filename and header carry the short commit hash. A dirty tree under `jaffle-shop/models/` or `rubric.md` adds a `-dirty` suffix and a warning line, so no number is ever attributed to a commit that does not contain it.|Pass|
+|II. Baseline and Diffable History|Report filename and header carry the short commit hash. Any uncommitted change outside `results/` (descriptions, rubric, or the scorecard code) adds a `-dirty` suffix and a warning line, so no number is ever attributed to a commit that does not contain it.|Pass|
 |III. Score What dbt Resolves|Descriptions come from `manifest.json`. Verified 2026-10-07: `orders.status` holds the resolved `docs.md` text, not the `{{ doc() }}` call. A failing `dbt build` stops the run with no report, which is this principle working as intended.|Pass|
 |IV. Code Scores, the Model Judges|Test-derived signals (keys, `accepted_values`) are pure code. Judgment parts get code heuristics labeled as heuristic (clarification 1), and the model grader is opt-in and never overrides.|Pass|
 |V. Smallest Harness That Works|One script, standard library plus dbt, no database or service. `anthropic` is an optional extra.|Pass|
