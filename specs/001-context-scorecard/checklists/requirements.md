@@ -33,6 +33,6 @@
 
 ## Notes
 
-- Iteration 1 passed. The spec names `rubric.md`, the sample project and an API key because the product is about documentation of that project, not because it fixes a technology. No language, file format or library is specified.
+- Iteration 1 passed. The spec names `rubric.md`, the sample project, an API key, and a Markdown report in `results/` because the product is about documentation of that project, not because it fixes a technology. No programming language or library is specified.
 - Zero clarification markers. Three open choices were resolved as stated defaults in Assumptions instead: undocumented columns count against coverage, seeds are out of scope, and staging models are scored like marts.
 - Blocking dependency: FR-010 means the scorecard cannot produce real grades until the user fills the five `YOU WRITE` sections of `rubric.md` (plan step 2).

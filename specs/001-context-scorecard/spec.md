@@ -6,7 +6,7 @@
 
 **Status**: Draft
 
-**Input**: User description: "@/Users/linsleymichira/Library/Mobile Documents/iCloud~md~obsidian/Documents/Obsidian Vault/1 Projects/3.1.1 LangChain VVP Project Plan.md". Scoped to MVP 3, the context coverage scorecard (plan § 3 and § 4, step 3). MVP 1, the context-change eval harness, is a separate feature.
+**Input**: User description: repository feature brief for the context coverage scorecard. Scoped to MVP 3, the context coverage scorecard (plan § 3 and § 4, step 3). MVP 1, the context-change eval harness, is a separate feature.
 
 ## Clarifications
 
