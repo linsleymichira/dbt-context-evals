@@ -1,0 +1,25 @@
+[project]
+name = "dbt-context-evals"
+version = "0.1.0"
+description = "Scores dbt column descriptions against a four-part context rubric."
+requires-python = ">=3.12"
+dependencies = [
+    "dbt-core>=1.11,<1.12",
+    "dbt-duckdb>=1.10,<1.11",
+]
+
+[project.optional-dependencies]
+llm = ["anthropic"]
+
+[dependency-groups]
+dev = ["pytest"]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+line-length = 79

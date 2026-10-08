@@ -11,7 +11,7 @@
 |---|---|---|---|
 |1|`.venv/bin/python score_context.py` with one `YOU WRITE` marker restored|Exit 2, the section named, no file in `results/`|FR-010|
 |2|`.venv/bin/python score_context.py` on a clean tree|Exit 0 in under 10 seconds, `results/<sha>.md` written|SC-001, SC-005|
-|3|Read the report's drift section|7 undocumented (including `customers.customer_lifetime_value`), 1 stale (`customers.total_order_amount`)|User Story 2, SC-002|
+|3|Read the report's drift section|12 undocumented (including `customers.customer_lifetime_value`), 1 stale (`customers.total_order_amount`)|User Story 2, SC-002|
 |4|Run scenario 2 twice and `diff` the two outputs|No differences|SC-004|
 |5|Edit one description without committing, run again|File ends in `-dirty.md` with a warning line|Principle II|
 |6|`--llm` with `ANTHROPIC_API_KEY` unset|Exit 4, key named, no file written|User Story 3, scenario 2|

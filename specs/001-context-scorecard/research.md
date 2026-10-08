@@ -4,7 +4,7 @@ All decisions dated 2026-10-07. No NEEDS CLARIFICATION items remain.
 
 ## R1. How the run refreshes dbt output (FR-012)
 
-- **Decision**: run `dbt build` then `dbt docs generate` as subprocesses with `--project-dir jaffle-shop --profiles-dir jaffle-shop`, and stop with the dbt error and no report if either exits nonzero.
+- **Decision**: run `dbt build` then `dbt docs generate` as subprocesses with `jaffle-shop/` as the working directory, because `profiles.yml` holds a relative DuckDB path that resolves against the working directory, not `--project-dir`, and stop with the dbt error and no report if either exits nonzero.
 - **Rationale**: the built column list comes from `catalog.json`, which queries the warehouse, and a fresh clone has no `.duckdb` file, so `build` must come first. Measured cost is about 4.3 seconds, inside SC-001's 10 seconds. A subprocess keeps dbt's own error output intact and avoids path coupling.
 - **Alternatives considered**: `dbt parse` alone (no catalog, so undocumented columns are invisible). `dbtRunner` in-process (works, but adds dbt internals to the script for no gain). Querying DuckDB's `information_schema` directly (duplicates what `docs generate` already does and couples to one adapter).
 
@@ -17,7 +17,7 @@ All decisions dated 2026-10-07. No NEEDS CLARIFICATION items remain.
 ## R3. Drift detection (FR-006)
 
 - **Decision**: compare, per model, lowercased column names in `catalog.json` against lowercased keys in `manifest.json` columns. Catalog only → undocumented. Manifest only → stale. Empty or whitespace description → undocumented.
-- **Rationale**: DuckDB returns lowercase names. On the baseline this yields 7 undocumented and 1 stale, matching a manual check.
+- **Rationale**: DuckDB returns lowercase names. On the baseline this yields 12 undocumented (5 of them YAML entries with tests but no text) and 1 stale.
 - **Alternatives considered**: none worth keeping.
 
 ## R4. Not-applicable signals (FR-004)

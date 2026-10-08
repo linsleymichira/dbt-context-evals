@@ -49,4 +49,4 @@ Identity: (`model`, `name`). Stale columns are listed but never graded.
 
 ## Baseline expectations (commit `e68d4c3`)
 
-27 graded-or-listed column records: 20 documented, 7 undocumented, 1 stale (outside the 27, since it is not built).
+27 graded column records: 15 documented, 12 undocumented. Plus 1 stale record, listed but not graded.

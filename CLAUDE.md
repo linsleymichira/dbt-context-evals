@@ -30,3 +30,12 @@ cd jaffle-shop
 ```
 
 `*.duckdb` and `.env` are gitignored at the root.
+
+Python dependencies are declared in the root `pyproject.toml` (a uv project with `package = false`). `uv sync --all-extras` installs dbt 1.11, pytest and the optional `anthropic` extra into `.venv` (worked on 2026-10-07 without the fallback in tasks.md T004).
+
+```shell
+uv sync --all-extras
+.venv/bin/python -m pytest                          # all tests
+.venv/bin/python -m pytest tests/test_columns.py -k pii   # one test
+ruff check score_context.py tests/ && ruff format score_context.py tests/
+```

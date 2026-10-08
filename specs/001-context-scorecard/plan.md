@@ -26,7 +26,7 @@ One command refreshes the dbt project, reads the resolved column descriptions an
 
 **Constraints**: Byte-identical output for the same commit (SC-004), so the report carries no timestamps or run durations and every table is sorted. No employer data (SC-006).
 
-**Scale/Scope**: 5 models, 27 built columns. Of those, 20 are documented and graded on resolved text, 7 are undocumented (`customers.customer_lifetime_value` plus 6 staging columns), and 1 documented column is stale (`customers.total_order_amount`). The vault plan's "21 columns" counts documented entries, stale one included.
+**Scale/Scope**: 5 models, 27 built columns. Of those, 15 have description text, 12 are undocumented (`customers.customer_lifetime_value` plus all 11 staging columns, 5 of which have tests but blank descriptions), and 1 documented column is stale (`customers.total_order_amount`). Corrected 2026-10-07 from a first count of 20 and 7, which treated blank YAML entries as documented. The vault plan's "21 columns" counts YAML entries, stale and blank ones included.
 
 ## Constitution Check
 

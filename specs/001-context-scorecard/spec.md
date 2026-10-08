@@ -37,7 +37,7 @@ The author runs one command against the sample dbt project and gets a coverage r
 
 ### User Story 2 - Surface documentation drift (Priority: P2)
 
-The report lists columns that are documented but no longer exist in the built model, and columns that exist in the built model but have no documentation. The baseline has 1 stale column (`customers.total_order_amount`) and 7 undocumented columns, including `customers.customer_lifetime_value` and 6 staging columns.
+The report lists columns that are documented but no longer exist in the built model, and columns that exist in the built model but have no documentation. The baseline has 1 stale column (`customers.total_order_amount`) and 12 undocumented columns: `customers.customer_lifetime_value` and all 11 staging columns. 5 of the staging columns have dbt tests but no description text.
 
 **Why this priority**: an undocumented column is the worst case for an agent, and a coverage number that silently skips it overstates quality. It is also a concrete, real finding to show the reader.
 

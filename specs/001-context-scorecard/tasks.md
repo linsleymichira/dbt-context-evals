@@ -25,10 +25,10 @@ description: "Task list for the Context Coverage Scorecard"
 
 **Purpose**: dependencies and folders, so every later step is one command from a fresh clone.
 
-- [ ] T001 Create `pyproject.toml` at the repo root per research.md R9: runtime deps `dbt-core>=1.11,<1.12` and `dbt-duckdb`, dev dep `pytest`, optional extra `llm = ["anthropic"]`, Python `>=3.12`
-- [ ] T002 [P] Create `.env.example` with the single line `ANTHROPIC_API_KEY=` and confirm `.env` is already ignored in `.gitignore`
-- [ ] T003 [P] Create `results/.gitkeep` so the committed reports folder exists
-- [ ] T004 Run `uv sync --all-extras` at the repo root, then confirm `.venv/bin/python -m pytest --version` and `.venv/bin/dbt --version` both print, and that dbt is still 1.11.x. If `uv sync` fails while resolving or downloading dbt (the certificate error from setup), fall back to `uv pip install --python .venv/bin/python -e ".[llm]" pytest` into the existing `.venv`, and record which path worked in `CLAUDE.md`
+- [X] T001 Create `pyproject.toml` at the repo root per research.md R9: runtime deps `dbt-core>=1.11,<1.12` and `dbt-duckdb`, dev dep `pytest`, optional extra `llm = ["anthropic"]`, Python `>=3.12`
+- [X] T002 [P] Create `.env.example` with the single line `ANTHROPIC_API_KEY=` and confirm `.env` is already ignored in `.gitignore`
+- [X] T003 [P] Create `results/.gitkeep` so the committed reports folder exists
+- [X] T004 Run `uv sync --all-extras` at the repo root, then confirm `.venv/bin/python -m pytest --version` and `.venv/bin/dbt --version` both print, and that dbt is still 1.11.x. If `uv sync` fails while resolving or downloading dbt (the certificate error from setup), fall back to `uv pip install --python .venv/bin/python -e ".[llm]" pytest` into the existing `.venv`, and record which path worked in `CLAUDE.md`
 
 ---
 
@@ -36,15 +36,15 @@ description: "Task list for the Context Coverage Scorecard"
 
 **Purpose**: rubric loading, the dbt refresh, column loading and the commit label. Every story reads these.
 
-- [ ] T005 [P] Write `tests/conftest.py` with builders for a minimal fixture manifest dict (2 models, test nodes for `unique`, `not_null`, `relationships`, `accepted_values`), a matching catalog dict, and a `rubric.md` text with all 5 sections filled
-- [ ] T006 [P] Write failing tests in `tests/test_rubric.py`: a rubric with any `<!-- YOU WRITE` marker raises the "unwritten" error naming every such section (FR-010), and a filled rubric returns the 4 part sentences plus the Not applicable sentence keyed by part
-- [ ] T007 Implement `load_rubric(path)` in `score_context.py` to pass T006
-- [ ] T008 [P] Write failing tests in `tests/test_refresh.py` with `subprocess.run` patched: `dbt build` runs before `dbt docs generate`, both with `--project-dir jaffle-shop --profiles-dir jaffle-shop`, and a nonzero exit from either raises the refresh error carrying dbt's output (research.md R1)
-- [ ] T009 Implement `refresh_dbt()` in `score_context.py` to pass T008
-- [ ] T010 [P] Write failing tests in `tests/test_columns.py`: catalog-only column → `undocumented`, manifest-only → `stale`, whitespace description → `undocumented`, names compared lowercased, `PII.` stripped from text with `pii=True`, facts `primary_key`, `foreign_key`, `accepted_values_test` and data type derived from test nodes and catalog (data-model.md, Column)
-- [ ] T011 Implement `load_columns(manifest, catalog)` in `score_context.py` to pass T010, limited to models in the `jaffle_shop` package
-- [ ] T012 [P] Write failing tests in `tests/test_commit.py` with git patched: a clean tree gives the short SHA, any uncommitted change to a tracked file outside `results/` gives `<sha>-dirty`, and a change only under `results/` does not (research.md R7)
-- [ ] T013 Implement `commit_label()` in `score_context.py` to pass T012
+- [X] T005 [P] Write `tests/conftest.py` with builders for a minimal fixture manifest dict (2 models, test nodes for `unique`, `not_null`, `relationships`, `accepted_values`), a matching catalog dict, and a `rubric.md` text with all 5 sections filled
+- [X] T006 [P] Write failing tests in `tests/test_rubric.py`: a rubric with any `<!-- YOU WRITE` marker raises the "unwritten" error naming every such section (FR-010), and a filled rubric returns the 4 part sentences plus the Not applicable sentence keyed by part
+- [X] T007 Implement `load_rubric(path)` in `score_context.py` to pass T006
+- [X] T008 [P] Write failing tests in `tests/test_refresh.py` with `subprocess.run` patched: `dbt build` runs before `dbt docs generate`, both with `jaffle-shop/` as the working directory, and a nonzero exit from either raises the refresh error carrying dbt's output (research.md R1)
+- [X] T009 Implement `refresh_dbt()` in `score_context.py` to pass T008
+- [X] T010 [P] Write failing tests in `tests/test_columns.py`: catalog-only column → `undocumented`, manifest-only → `stale`, whitespace description → `undocumented`, names compared lowercased, `PII.` stripped from text with `pii=True`, facts `primary_key`, `foreign_key`, `accepted_values_test` and data type derived from test nodes and catalog (data-model.md, Column)
+- [X] T011 Implement `load_columns(manifest, catalog)` in `score_context.py` to pass T010, limited to models in the `jaffle_shop` package
+- [X] T012 [P] Write failing tests in `tests/test_commit.py` with git patched: a clean tree gives the short SHA, any uncommitted change outside `results/` gives `<sha>-dirty`, and a change only under `results/` does not (research.md R7)
+- [X] T013 Implement `commit_label()` in `score_context.py` to pass T012
 
 **Checkpoint**: `pytest` passes, and `load_columns` on the real baseline artifacts returns 27 built columns and 1 stale column.
 
@@ -74,11 +74,11 @@ description: "Task list for the Context Coverage Scorecard"
 
 **Goal**: the report lists undocumented and stale columns, and undocumented columns count against coverage.
 
-**Independent Test**: on the baseline, the drift section lists 7 undocumented columns (including `customers.customer_lifetime_value`) and 1 stale column (`customers.total_order_amount`), as in quickstart.md scenario 3.
+**Independent Test**: on the baseline, the drift section lists 12 undocumented columns (including `customers.customer_lifetime_value` and all 11 staging columns) and 1 stale column (`customers.total_order_amount`), as in quickstart.md scenario 3.
 
 - [ ] T023 [P] [US2] Write failing tests in `tests/test_drift.py`: an undocumented column fails every applicable part with reason "no description", a stale column appears in the stale list and in no pass rate, and the two lists render as separate report sections in that order (FR-006, spec User Story 2)
 - [ ] T024 [US2] Extend `grade_all()` and `render_report()` in `score_context.py` to pass T023
-- [ ] T025 [US2] Run quickstart.md scenario 3 and confirm the 7 and 1 counts against the real baseline
+- [ ] T025 [US2] Run quickstart.md scenario 3 and confirm the 12 and 1 counts against the real baseline
 
 ---
 
