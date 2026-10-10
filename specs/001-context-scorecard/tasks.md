@@ -64,7 +64,7 @@ description: "Task list for the Context Coverage Scorecard"
 - [X] T019 [P] [US1] Add failing tests to `tests/test_report.py` for example selection: 3 to 5 columns, at least one pass and one fail, same picks on every run (FR-008)
 - [X] T020 [US1] Implement `grade_all()`, `select_examples()` and `render_report()` in `score_context.py` to pass T018 and T019, following the section order in `contracts/cli.md`
 - [X] T021 [US1] Implement `main()` in `score_context.py`: rubric check (exit 2), refresh (exit 3), load, grade, print, write `results/<label>.md`, exit 0, with errors on stderr and no file written on any failure (`contracts/cli.md`)
-- [ ] T022 [US1] Run quickstart.md scenarios 1, 2 and 4 against the real project and record the results in chat, then commit `results/<sha>.md`
+- [X] T022 [US1] Run quickstart.md scenarios 1, 2 and 4 against the real project and record the results in chat, then commit `results/<sha>.md`
 
 **Checkpoint**: stop point 1 is reachable. The scorecard alone is a shippable deliverable.
 
@@ -78,7 +78,7 @@ description: "Task list for the Context Coverage Scorecard"
 
 - [X] T023 [P] [US2] Write failing tests in `tests/test_drift.py`: an undocumented column fails every applicable part with reason "no description", a stale column appears in the stale list and in no pass rate, and the two lists render as separate report sections in that order (FR-006, spec User Story 2)
 - [X] T024 [US2] Extend `grade_all()` and `render_report()` in `score_context.py` to pass T023
-- [ ] T025 [US2] Run quickstart.md scenario 3 and confirm the 12 and 1 counts against the real baseline
+- [X] T025 [US2] Run quickstart.md scenario 3 and confirm the 12 and 1 counts against the real baseline
 
 ---
 
