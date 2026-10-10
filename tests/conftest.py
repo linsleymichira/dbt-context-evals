@@ -45,10 +45,10 @@ def _model(name, columns, package="jaffle_shop"):
     }
 
 
-def _test(test_name, model_id, column):
+def _test(test_name, model_id, column, **kwargs):
     return {
         "resource_type": "test",
-        "test_metadata": {"name": test_name, "kwargs": {}},
+        "test_metadata": {"name": test_name, "kwargs": kwargs},
         "attached_node": model_id,
         "column_name": column,
     }
@@ -86,7 +86,12 @@ def manifest():
             "test.n1": _test("not_null", CUSTOMERS, "customer_id"),
             "test.n2": _test("not_null", ORDERS, "order_id"),
             "test.r1": _test("relationships", ORDERS, "customer_id"),
-            "test.a1": _test("accepted_values", ORDERS, "status"),
+            "test.a1": _test(
+                "accepted_values",
+                ORDERS,
+                "status",
+                values=["placed", "shipped", "completed"],
+            ),
         }
     }
 

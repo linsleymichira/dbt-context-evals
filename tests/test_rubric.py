@@ -58,6 +58,9 @@ def test_a_missing_section_counts_as_unwritten(tmp_path):
     assert err.value.sections == ("default_filter", "not_applicable")
 
 
-def test_the_real_unwritten_rubric_is_refused():
-    with pytest.raises(score_context.RubricUnwritten):
-        score_context.load_rubric(score_context.REPO_ROOT / "rubric.md")
+def test_the_real_rubric_has_every_section_written():
+    # The published number is only defensible when all 5 of the user's
+    # sentences exist. Until 2026-10-09 this test asserted the opposite.
+    rubric = score_context.load_rubric(score_context.REPO_ROOT / "rubric.md")
+
+    assert set(rubric) == set(score_context.RUBRIC_SECTIONS)

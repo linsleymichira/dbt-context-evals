@@ -5,6 +5,7 @@ Usage: .venv/bin/python score_context.py [--llm]
 See specs/001-context-scorecard/ for the spec, plan, and CLI contract.
 """
 
+import json
 import re
 import subprocess
 import sys
@@ -13,6 +14,8 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent
 PROJECT_DIR = REPO_ROOT / "jaffle-shop"
+RUBRIC_PATH = REPO_ROOT / "rubric.md"
+RESULTS_DIR = REPO_ROOT / "results"
 PACKAGE = "jaffle_shop"
 DBT = str(Path(sys.executable).parent / "dbt")
 
@@ -28,6 +31,70 @@ PII_TOKEN = re.compile(r"\s*\bPII\.")
 KEY_TESTS = frozenset(
     {"unique", "not_null", "relationships", "accepted_values"}
 )
+
+# Rule summaries the user approved on 2026-10-09 (tasks.md T015). Each one
+# is printed beside the user's own sentence from rubric.md (FR-003).
+RULE_SUMMARIES = {
+    "business_meaning": (
+        "The description has at least 2 content words that are not in "
+        "the column name and are not filler. A key column must name the "
+        "table it joins to."
+    ),
+    "allowed_values": (
+        "A column with an accepted_values test names every tested value "
+        "in its description. A numeric or date column has a unit code in "
+        "parentheses, a unit word, or an explicit range."
+    ),
+    "interpretation_guidance": (
+        "The description contains a caveat phrase: unless, except, "
+        "excluding, does not include, not the same as, even if, only when."
+    ),
+    "default_filter": (
+        "The description has a filter phrase (filter to, exclude, include "
+        "only, by default) and an override phrase (unless, except when, "
+        "only if)."
+    ),
+    "not_applicable": (
+        "A key column (unique plus not_null tests, or a relationships "
+        "test) skips allowed values and default filter. A free-text "
+        "column (varchar with no accepted_values test) skips allowed "
+        "values."
+    ),
+}
+HEURISTIC_PARTS = frozenset({"business_meaning", "interpretation_guidance"})
+PART_TITLES = {
+    "business_meaning": "Business meaning",
+    "allowed_values": "Allowed values",
+    "interpretation_guidance": "Interpretation guidance",
+    "default_filter": "Default filter",
+    "not_applicable": "Not applicable",
+}
+
+STOPWORDS = frozenset(
+    "a an and are as at be by can for from has have in is it its of on "
+    "one or that the their they to was were which with".split()
+)
+FILLER = frozenset("this identifier unique id key column field value".split())
+MIN_CONTENT_WORDS = 2
+UNIT_OR_RANGE = re.compile(
+    r"\([A-Z]{2,5}\)"
+    r"|%|(?i:\b(?:percent|percentage|dollars|cents|days|hours|minutes"
+    r"|seconds)\b)"
+    r"|(?i:\b(?:between|at least|at most|greater than|less than|or more"
+    r"|or fewer|non-negative|positive|negative|minimum|maximum|up to"
+    r"|ranges? from)\b)"
+    r"|[<>]=?|\b\d+ to \d+\b"
+)
+CAVEAT = re.compile(
+    r"\b(?:unless|except|excluding|does not include|not the same as"
+    r"|even if|only when)\b",
+    flags=re.I,
+)
+FILTER = re.compile(
+    r"\b(?:filter to|exclud(?:e|es|ing)|include only|by default)\b",
+    flags=re.I,
+)
+OVERRIDE = re.compile(r"\b(?:unless|except when|only if)\b", flags=re.I)
 
 
 class RubricUnwritten(Exception):
@@ -53,6 +120,17 @@ class Column:
     pii: bool
     facts: frozenset
     data_type: str | None
+    accepted_values: tuple = ()
+
+
+@dataclass(frozen=True)
+class Grade:
+    model: str
+    name: str
+    part: str
+    outcome: str  # pass, fail, or n/a
+    reason: str
+    grader: str = "rule"
 
 
 # --- rubric ---------------------------------------------------------------
@@ -117,6 +195,23 @@ def refresh_dbt():
 # --- columns --------------------------------------------------------------
 
 
+def _accepted_values(nodes, model_id):
+    """{column: tuple of values} from accepted_values tests on one model."""
+    return {
+        node["column_name"].lower(): tuple(
+            str(value)
+            for value in node["test_metadata"]
+            .get("kwargs", {})
+            .get("values", ())
+        )
+        for node in nodes.values()
+        if node.get("resource_type") == "test"
+        and node.get("attached_node") == model_id
+        and node.get("column_name")
+        and (node.get("test_metadata") or {}).get("name") == "accepted_values"
+    }
+
+
 def _column_facts(nodes, model_id):
     """{column: set of test names} for dbt tests attached to one model."""
     tests = {}
@@ -156,6 +251,7 @@ def _model_columns(model_id, node, nodes, catalog_nodes):
         .items()
     }
     facts = _column_facts(nodes, model_id)
+    values = _accepted_values(nodes, model_id)
     for name in documented.keys() | built.keys():
         raw = documented.get(name, "")
         description = PII_TOKEN.sub("", raw).strip()
@@ -173,6 +269,7 @@ def _model_columns(model_id, node, nodes, catalog_nodes):
             pii=bool(PII_TOKEN.search(raw)),
             facts=facts.get(name, frozenset()),
             data_type=built.get(name),
+            accepted_values=values.get(name, ()),
         )
 
 
@@ -214,3 +311,318 @@ def commit_label():
     ]
     dirty = any(not path.startswith("results/") for path in changed)
     return f"{sha}-dirty" if dirty else sha
+
+
+# --- rules ----------------------------------------------------------------
+
+
+def _is_key(column):
+    return bool(column.facts & {"primary_key", "foreign_key"})
+
+
+def _is_categorical(column):
+    return "accepted_values_test" in column.facts
+
+
+def _is_free_text(column):
+    return (
+        (column.data_type or "").startswith("varchar")
+        and not _is_categorical(column)
+        and not _is_key(column)
+    )
+
+
+def not_applicable(column, part):
+    """The user's Not applicable rule (FR-004)."""
+    if _is_key(column):
+        return part in ("allowed_values", "default_filter")
+    return _is_free_text(column) and part == "allowed_values"
+
+
+def _stem(word):
+    return word[:-1] if len(word) > 3 and word.endswith("s") else word
+
+
+def _words(text):
+    return [_stem(w) for w in re.findall(r"[a-z]+", text.lower())]
+
+
+def _business_meaning(column, models):
+    if _is_key(column):
+        named = [
+            model
+            for model in sorted(models)
+            if re.search(rf"\b{re.escape(model)}\b", column.description, re.I)
+        ]
+        if named:
+            return "pass", ""
+        return "fail", "key names no table it joins to"
+    name_words = set(_words(column.name.replace("_", " ")))
+    added = {
+        word
+        for word in _words(column.description.replace("'s", ""))
+        if word not in name_words | STOPWORDS | FILLER
+    }
+    if len(added) >= MIN_CONTENT_WORDS:
+        return "pass", ""
+    return "fail", "adds fewer than 2 words to the column name"
+
+
+def _allowed_values(column, models):
+    if _is_categorical(column):
+        if not column.accepted_values:
+            return "fail", "accepted_values test lists no values to check"
+        missing = [
+            value
+            for value in column.accepted_values
+            if not re.search(
+                rf"(?<!\w){re.escape(value)}(?!\w)",
+                column.description,
+                re.I,
+            )
+        ]
+        if missing:
+            return "fail", "values not listed: " + ", ".join(missing)
+        return "pass", ""
+    if UNIT_OR_RANGE.search(column.description):
+        return "pass", ""
+    return "fail", "no unit or range, only a type"
+
+
+def _interpretation_guidance(column, models):
+    if CAVEAT.search(column.description):
+        return "pass", ""
+    return "fail", "names no case where the obvious reading is wrong"
+
+
+def _default_filter(column, models):
+    if not FILTER.search(column.description):
+        return "fail", "says no default rows to include or exclude"
+    if not OVERRIDE.search(column.description):
+        return "fail", "gives a default but not when to override it"
+    return "pass", ""
+
+
+RULES = {
+    "business_meaning": _business_meaning,
+    "allowed_values": _allowed_values,
+    "interpretation_guidance": _interpretation_guidance,
+    "default_filter": _default_filter,
+}
+
+
+def grade_column(column, models):
+    """One rule Grade per rubric part, in PARTS order."""
+
+    def outcome(part):
+        if not_applicable(column, part):
+            return "n/a", ""
+        if column.status == "undocumented":
+            return "fail", "no description"
+        return RULES[part](column, models)
+
+    return tuple(
+        Grade(column.model, column.name, part, *outcome(part))
+        for part in PARTS
+    )
+
+
+def grade_all(columns):
+    """Grades for every built column. Stale columns are never graded."""
+    models = frozenset(column.model for column in columns)
+    return tuple(
+        grade
+        for column in sorted(columns, key=lambda c: (c.model, c.name))
+        if column.status != "stale"
+        for grade in grade_column(column, models)
+    )
+
+
+# --- report ---------------------------------------------------------------
+
+
+def _by_column(grades):
+    by_column = {}
+    for grade in grades:
+        by_column.setdefault((grade.model, grade.name), {})[grade.part] = grade
+    return by_column
+
+
+def select_examples(columns, grades):
+    """3 to 5 columns for the README, one per distinct grade pattern.
+
+    Patterns with the most passes come first and ties break on model then
+    column, so every run picks the same columns (FR-008).
+    """
+    by_column = _by_column(grades)
+    graded = sorted(
+        (c for c in columns if (c.model, c.name) in by_column),
+        key=lambda c: (c.model, c.name),
+    )
+
+    def pattern(column):
+        parts = by_column[(column.model, column.name)]
+        return tuple(parts[part].outcome for part in PARTS)
+
+    first_of_pattern = {}
+    for column in graded:
+        first_of_pattern.setdefault(pattern(column), column)
+    picks = sorted(
+        first_of_pattern.values(),
+        key=lambda c: (-pattern(c).count("pass"), c.model, c.name),
+    )[:5]
+    if not any("fail" in pattern(c) for c in picks):
+        failing = [c for c in graded if "fail" in pattern(c)]
+        picks = picks[:4] + failing[:1]
+    fill = [c for c in graded if c not in picks]
+    picks = picks + fill[: max(0, 3 - len(picks))]
+    return tuple(picks)
+
+
+def _table(header, rows):
+    lines = [header, ["---"] * len(header), *rows]
+    return "\n".join("|" + "|".join(cells) + "|" for cells in lines)
+
+
+def _rate(grades):
+    applicable = [g for g in grades if g.outcome != "n/a"]
+    passes = sum(g.outcome == "pass" for g in applicable)
+    percent = f"{100 * passes / len(applicable):.0f}%" if applicable else "n/a"
+    return [str(passes), str(len(applicable)), percent]
+
+
+def _column_row(column, parts):
+    reasons = ". ".join(
+        f"{PART_TITLES[part]}: {parts[part].reason}"
+        for part in PARTS
+        if parts[part].outcome == "fail"
+    )
+    return [
+        column.model,
+        column.name,
+        "PII" if column.pii else "",
+        *(parts[part].outcome for part in PARTS),
+        reasons,
+    ]
+
+
+def _name_list(label, columns):
+    names = ", ".join(f"`{c.model}.{c.name}`" for c in columns) or "none"
+    return f"{label} ({len(columns)}): {names}"
+
+
+def render_report(label, rubric, columns, grades):
+    """The Markdown report, in the section order of contracts/cli.md."""
+    columns = sorted(columns, key=lambda c: (c.model, c.name))
+    by_column = _by_column(grades)
+    graded = [c for c in columns if (c.model, c.name) in by_column]
+    column_header = [
+        "Model",
+        "Column",
+        "PII",
+        *(PART_TITLES[part] for part in PARTS),
+        "Why it failed",
+    ]
+    sections = [
+        f"# Context coverage scorecard at `{label}`",
+        *(
+            [
+                "Warning: the working tree had uncommitted changes, so "
+                "this report does not match a commit."
+            ]
+            if label.endswith("-dirty")
+            else []
+        ),
+        "These grades come from rule-based checks and are a heuristic, "
+        "not a judgment of quality. Business meaning and interpretation "
+        "guidance are pattern checks and are marked heuristic below.",
+        "## Rubric",
+        _table(
+            ["Part", "Rubric sentence", "Rule", "Heuristic"],
+            [
+                [
+                    PART_TITLES[key],
+                    " ".join(rubric[key].split()),
+                    RULE_SUMMARIES[key],
+                    "yes" if key in HEURISTIC_PARTS else "no",
+                ]
+                for key in RUBRIC_SECTIONS
+            ],
+        ),
+        "## Pass rate by part",
+        _table(
+            ["Part", "Passed", "Applicable", "Rate"],
+            [
+                [
+                    PART_TITLES[part],
+                    *_rate(g for g in grades if g.part == part),
+                ]
+                for part in PARTS
+            ],
+        ),
+        "## Pass rate by model",
+        _table(
+            ["Model", "Passed", "Applicable", "Rate"],
+            [
+                [model, *_rate(g for g in grades if g.model == model)]
+                for model in sorted({g.model for g in grades})
+            ],
+        ),
+        "## Drift",
+        _name_list(
+            "Undocumented", [c for c in columns if c.status == "undocumented"]
+        ),
+        _name_list("Stale", [c for c in columns if c.status == "stale"]),
+        "## Columns",
+        _table(
+            column_header,
+            [_column_row(c, by_column[(c.model, c.name)]) for c in graded],
+        ),
+        "## Examples",
+        _table(
+            column_header[:2] + ["Description"] + column_header[3:],
+            [
+                [
+                    *row[:2],
+                    " ".join(c.description.replace("|", "/").split())[:120]
+                    or "(none)",
+                    *row[3:],
+                ]
+                for c in select_examples(columns, grades)
+                for row in [_column_row(c, by_column[(c.model, c.name)])]
+            ],
+        ),
+    ]
+    return "\n\n".join(sections) + "\n"
+
+
+# --- entry point ----------------------------------------------------------
+
+
+def main():
+    """Rubric check, refresh, grade, print and write (contracts/cli.md)."""
+    try:
+        rubric = load_rubric(RUBRIC_PATH)
+    except RubricUnwritten as error:
+        print(error, file=sys.stderr)
+        return 2
+    try:
+        refresh_dbt()
+    except RefreshFailed as error:
+        print(error, file=sys.stderr)
+        return 3
+    target = PROJECT_DIR / "target"
+    columns = load_columns(
+        json.loads((target / "manifest.json").read_text()),
+        json.loads((target / "catalog.json").read_text()),
+    )
+    label = commit_label()
+    report = render_report(label, rubric, columns, grade_all(columns))
+    print(report, end="")
+    RESULTS_DIR.mkdir(exist_ok=True)
+    (RESULTS_DIR / f"{label}.md").write_text(report)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -10,7 +10,7 @@ A description passes when it gives the definition this business has agreed on fo
 
 ## 2. Allowed values
 
-A description passes when a categorical column lists every expected value and what each one means, and a numeric column states the range or kind of values to expect. A data type alone never passes.
+A description passes when a categorical column lists every expected value and what each one means, and a numeric or date column states the range or kind of values to expect. A data type alone never passes.
 
 ## 3. Interpretation guidance
 

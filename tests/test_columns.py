@@ -73,3 +73,16 @@ def test_columns_are_sorted_by_model_then_name(manifest, catalog):
 
     keys = [(c.model, c.name) for c in columns]
     assert keys == sorted(keys)
+
+
+def test_tested_values_are_kept_so_the_rule_can_check_each_one(
+    manifest, catalog
+):
+    cols = _by_key(score_context.load_columns(manifest, catalog))
+
+    assert cols[("orders", "status")].accepted_values == (
+        "placed",
+        "shipped",
+        "completed",
+    )
+    assert cols[("customers", "first_name")].accepted_values == ()

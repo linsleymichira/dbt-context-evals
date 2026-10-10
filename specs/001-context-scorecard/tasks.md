@@ -57,13 +57,13 @@ description: "Task list for the Context Coverage Scorecard"
 **Independent Test**: on a clean tree, `.venv/bin/python score_context.py` exits 0, prints the report, writes `results/<sha>.md`, and a second run produces a byte-identical file (quickstart.md scenarios 1, 2, 4).
 
 - [X] T014 [US1] **USER GATE**: the user writes all 5 sections of `rubric.md` (plan step 2). Claude does not draft them (constitution Principle I)
-- [ ] T015 [US1] **USER GATE**: Claude proposes one rule per part plus the Not applicable rule in chat, each as a plain-language summary quoting the user's sentence (research.md R5 candidates are a starting point, not a default). The user approves or edits each. Record the approved summaries as constants in `score_context.py`
-- [ ] T016 [P] [US1] Write failing tests in `tests/test_rules.py` from the approved rules only: for each part, at least one description that must pass and one that must fail, with a test name stating the business reason (for example `test_restating_the_column_name_is_not_business_meaning`), plus N/A cases from the approved Not applicable rule (FR-004)
-- [ ] T017 [US1] Implement the 4 rule functions and the N/A check in `score_context.py` to pass T016. Each returns outcome plus a one-line reason, and the two judgment parts are flagged heuristic (FR-009)
-- [ ] T018 [P] [US1] Write failing tests in `tests/test_report.py`: pass rate by part excludes `n/a` from the denominator, pass rate by model uses applicable grades, every `fail` has a reason, a column whose description carried `PII.` shows the PII flag in the per-column table, the heuristic notice and the rubric table (sentence beside rule summary) are present, rows sort by model then column, the output contains no timestamp or absolute path, and rendering twice gives identical strings (FR-003, FR-005, FR-007, FR-011, SC-004)
-- [ ] T019 [P] [US1] Add failing tests to `tests/test_report.py` for example selection: 3 to 5 columns, at least one pass and one fail, same picks on every run (FR-008)
-- [ ] T020 [US1] Implement `grade_all()`, `select_examples()` and `render_report()` in `score_context.py` to pass T018 and T019, following the section order in `contracts/cli.md`
-- [ ] T021 [US1] Implement `main()` in `score_context.py`: rubric check (exit 2), refresh (exit 3), load, grade, print, write `results/<label>.md`, exit 0, with errors on stderr and no file written on any failure (`contracts/cli.md`)
+- [X] T015 [US1] **USER GATE**: Claude proposes one rule per part plus the Not applicable rule in chat, each as a plain-language summary quoting the user's sentence (research.md R5 candidates are a starting point, not a default). The user approves or edits each. Record the approved summaries as constants in `score_context.py`
+- [X] T016 [P] [US1] Write failing tests in `tests/test_rules.py` from the approved rules only: for each part, at least one description that must pass and one that must fail, with a test name stating the business reason (for example `test_restating_the_column_name_is_not_business_meaning`), plus N/A cases from the approved Not applicable rule (FR-004)
+- [X] T017 [US1] Implement the 4 rule functions and the N/A check in `score_context.py` to pass T016. Each returns outcome plus a one-line reason, and the two judgment parts are flagged heuristic (FR-009)
+- [X] T018 [P] [US1] Write failing tests in `tests/test_report.py`: pass rate by part excludes `n/a` from the denominator, pass rate by model uses applicable grades, every `fail` has a reason, a column whose description carried `PII.` shows the PII flag in the per-column table, the heuristic notice and the rubric table (sentence beside rule summary) are present, rows sort by model then column, the output contains no timestamp or absolute path, and rendering twice gives identical strings (FR-003, FR-005, FR-007, FR-011, SC-004)
+- [X] T019 [P] [US1] Add failing tests to `tests/test_report.py` for example selection: 3 to 5 columns, at least one pass and one fail, same picks on every run (FR-008)
+- [X] T020 [US1] Implement `grade_all()`, `select_examples()` and `render_report()` in `score_context.py` to pass T018 and T019, following the section order in `contracts/cli.md`
+- [X] T021 [US1] Implement `main()` in `score_context.py`: rubric check (exit 2), refresh (exit 3), load, grade, print, write `results/<label>.md`, exit 0, with errors on stderr and no file written on any failure (`contracts/cli.md`)
 - [ ] T022 [US1] Run quickstart.md scenarios 1, 2 and 4 against the real project and record the results in chat, then commit `results/<sha>.md`
 
 **Checkpoint**: stop point 1 is reachable. The scorecard alone is a shippable deliverable.
@@ -76,8 +76,8 @@ description: "Task list for the Context Coverage Scorecard"
 
 **Independent Test**: on the baseline, the drift section lists 12 undocumented columns (including `customers.customer_lifetime_value` and all 11 staging columns) and 1 stale column (`customers.total_order_amount`), as in quickstart.md scenario 3.
 
-- [ ] T023 [P] [US2] Write failing tests in `tests/test_drift.py`: an undocumented column fails every applicable part with reason "no description", a stale column appears in the stale list and in no pass rate, and the two lists render as separate report sections in that order (FR-006, spec User Story 2)
-- [ ] T024 [US2] Extend `grade_all()` and `render_report()` in `score_context.py` to pass T023
+- [X] T023 [P] [US2] Write failing tests in `tests/test_drift.py`: an undocumented column fails every applicable part with reason "no description", a stale column appears in the stale list and in no pass rate, and the two lists render as separate report sections in that order (FR-006, spec User Story 2)
+- [X] T024 [US2] Extend `grade_all()` and `render_report()` in `score_context.py` to pass T023
 - [ ] T025 [US2] Run quickstart.md scenario 3 and confirm the 12 and 1 counts against the real baseline
 
 ---
