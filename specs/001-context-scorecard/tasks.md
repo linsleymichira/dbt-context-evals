@@ -56,7 +56,7 @@ description: "Task list for the Context Coverage Scorecard"
 
 **Independent Test**: on a clean tree, `.venv/bin/python score_context.py` exits 0, prints the report, writes `results/<sha>.md`, and a second run produces a byte-identical file (quickstart.md scenarios 1, 2, 4).
 
-- [ ] T014 [US1] **USER GATE**: the user writes all 5 sections of `rubric.md` (plan step 2). Claude does not draft them (constitution Principle I)
+- [X] T014 [US1] **USER GATE**: the user writes all 5 sections of `rubric.md` (plan step 2). Claude does not draft them (constitution Principle I)
 - [ ] T015 [US1] **USER GATE**: Claude proposes one rule per part plus the Not applicable rule in chat, each as a plain-language summary quoting the user's sentence (research.md R5 candidates are a starting point, not a default). The user approves or edits each. Record the approved summaries as constants in `score_context.py`
 - [ ] T016 [P] [US1] Write failing tests in `tests/test_rules.py` from the approved rules only: for each part, at least one description that must pass and one that must fail, with a test name stating the business reason (for example `test_restating_the_column_name_is_not_business_meaning`), plus N/A cases from the approved Not applicable rule (FR-004)
 - [ ] T017 [US1] Implement the 4 rule functions and the N/A check in `score_context.py` to pass T016. Each returns outcome plus a one-line reason, and the two judgment parts are flagged heuristic (FR-009)

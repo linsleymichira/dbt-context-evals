@@ -6,20 +6,20 @@ The standard to aim for is the `account_status` example from LangChain's post "H
 
 ## 1. Business meaning
 
-<!-- YOU WRITE: one sentence on what passes. What must a description say beyond restating the column name? -->
+A description passes when it gives the definition this business has agreed on for the column, which another company might define differently, and does more than restate the column name.
 
 ## 2. Allowed values
 
-<!-- YOU WRITE: one sentence on what passes. When does a column need its values listed, and when is a type enough? -->
+A description passes when a categorical column lists every expected value and what each one means, and a numeric column states the range or kind of values to expect. A data type alone never passes.
 
 ## 3. Interpretation guidance
 
-<!-- YOU WRITE: one sentence on what passes. What tells a reader how to use the column correctly, or where the edge cases are? -->
+A description passes when it says how to read the column correctly and names at least one case where the obvious reading is wrong.
 
 ## 4. Default filter
 
-<!-- YOU WRITE: one sentence on what passes. When should a description say which rows to include or exclude by default? -->
+A description passes when it says which rows to include or exclude by default, and when to override that.
 
 ## Not applicable
 
-<!-- YOU WRITE: which parts can a column skip? For example, does a primary key need allowed values or a default filter? -->
+A key column skips allowed values and default filter, but it must still pass business meaning by saying what one row is and what the key joins to. A free-text column skips allowed values. Every other part applies to every column.
