@@ -130,6 +130,8 @@ class Column:
     facts: frozenset
     data_type: str | None
     accepted_values: tuple = ()
+    path: str = ""  # file that defines the column, relative to the project
+    line: int | None = None
 
 
 @dataclass(frozen=True)
@@ -248,7 +250,33 @@ def _column_facts(nodes, model_id):
     }
 
 
-def _model_columns(model_id, node, nodes, catalog_nodes):
+YAML_NAME = re.compile(r"""^(\s*)-\s+name:\s*['"]?([^'"\s#]+)""")
+
+
+def find_column_line(text, model, column):
+    """The 1-based line of a column's entry under its model, or None.
+
+    Two models often share a column name, so the column only matches
+    while the scan is inside the named model's block.
+    """
+    model_indent = None
+    in_model = False
+    for number, line in enumerate(text.splitlines(), 1):
+        found = YAML_NAME.match(line)
+        if not found:
+            continue
+        indent, name = len(found.group(1)), found.group(2)
+        if model_indent is None or indent <= model_indent:
+            model_indent = indent
+            in_model = name == model
+        elif in_model and name.lower() == column:
+            return number
+    return None
+
+
+def _model_columns(model_id, node, nodes, catalog_nodes, read=None):
+    schema_path = (node.get("patch_path") or "").partition("://")[2]
+    schema_text = read(schema_path) if read and schema_path else ""
     documented = {
         name.lower(): col.get("description") or ""
         for name, col in node["columns"].items()
@@ -270,6 +298,12 @@ def _model_columns(model_id, node, nodes, catalog_nodes):
             status = "documented"
         else:
             status = "undocumented"
+        if name in documented and schema_path:
+            path = schema_path
+            line = find_column_line(schema_text, node["name"], name)
+        else:
+            # Built by the SQL and absent from the YAML.
+            path, line = node.get("original_file_path") or "", None
         yield Column(
             model=node["name"],
             name=name,
@@ -279,11 +313,17 @@ def _model_columns(model_id, node, nodes, catalog_nodes):
             facts=facts.get(name, frozenset()),
             data_type=built.get(name),
             accepted_values=values.get(name, ()),
+            path=path,
+            line=line,
         )
 
 
-def load_columns(manifest, catalog):
-    """Every built or documented column of the project's models, sorted."""
+def load_columns(manifest, catalog, read=None):
+    """Every built or documented column of the project's models, sorted.
+
+    read takes a project-relative path and returns the file's text. With
+    it, each column documented in a schema file gets its line number.
+    """
     nodes = manifest["nodes"]
     columns = (
         column
@@ -291,7 +331,7 @@ def load_columns(manifest, catalog):
         if node.get("resource_type") == "model"
         and node.get("package_name") == PACKAGE
         for column in _model_columns(
-            model_id, node, nodes, catalog.get("nodes", {})
+            model_id, node, nodes, catalog.get("nodes", {}), read
         )
     )
     return tuple(sorted(columns, key=lambda c: (c.model, c.name)))
@@ -597,6 +637,14 @@ def _rate(grades):
     return [str(passes), str(len(applicable)), percent]
 
 
+def _link(text, column):
+    """text as a link to the column's definition, relative to results/."""
+    if not column.path:
+        return text
+    anchor = f"#L{column.line}" if column.line else ""
+    return f"[{text}](../{PROJECT_DIR.name}/{column.path}{anchor})"
+
+
 def _column_row(column, parts):
     reasons = ". ".join(
         f"{PART_TITLES[part]}: {parts[part].reason}"
@@ -605,7 +653,7 @@ def _column_row(column, parts):
     )
     return [
         column.model,
-        column.name,
+        _link(column.name, column),
         "PII" if column.pii else "",
         *(parts[part].outcome for part in PARTS),
         reasons,
@@ -625,7 +673,9 @@ def _model_cells(parts):
 
 
 def _name_list(label, columns):
-    names = ", ".join(f"`{c.model}.{c.name}`" for c in columns) or "none"
+    names = (
+        ", ".join(_link(f"`{c.model}.{c.name}`", c) for c in columns) or "none"
+    )
     return f"{label} ({len(columns)}): {names}"
 
 
@@ -757,6 +807,7 @@ def main(argv=None):
     columns = load_columns(
         json.loads((target / "manifest.json").read_text()),
         json.loads((target / "catalog.json").read_text()),
+        read=lambda path: (PROJECT_DIR / path).read_text(),
     )
     label = commit_label()
     grades = grade_all(columns)

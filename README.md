@@ -2,7 +2,7 @@
 
 A scorecard for dbt column descriptions, read as context for an agent that writes SQL. One command grades every built column on four parts and prints the coverage.
 
-The four parts come from LangChain's post "How LangChain Built an Agent-First Data Stack" (July 27, 2026). The post holds up one `account_status` description as the standard. That description names the source system, defines each value and gives a default filter. The sample is dbt Labs' public `jaffle_shop_duckdb` project, vendored under `jaffle-shop/` with its descriptions untouched.
+The four parts come from LangChain's post "How LangChain Built an Agent-First Data Stack" (July 27, 2026). The post holds up one `account_status` description as a stronger example. That description names the source system, defines each value and gives a default filter. The sample is dbt Labs' public `jaffle_shop_duckdb` project, vendored under `jaffle-shop/` with its descriptions untouched.
 
 ## Run it
 

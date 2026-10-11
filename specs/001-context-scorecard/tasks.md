@@ -90,7 +90,7 @@ description: "Task list for the Context Coverage Scorecard"
 
 - [X] T026 [P] [US3] Write failing tests in `tests/test_llm.py` with the client patched: no `--llm` means the `anthropic` package is never imported, a missing package or key exits 4 naming which, model grades appear only for `business_meaning` and `interpretation_guidance`, rule grades and pass rates are identical with and without `--llm`, and the model id comes from `SCORECARD_MODEL` with default `claude-sonnet-5-5` (research.md R8)
 - [X] T027 [US3] Implement the `--llm` flag, lazy import, `.env` reading and `grade_with_model()` in `score_context.py` to pass T026, with the prompt carrying the user's rubric sentence and the resolved description
-- [ ] T028 [US3] **USER GATE**: with a real key in `.env`, run `--llm` once and read 3 model reasons aloud against the rubric. Skip until Saturday, October 10 if no key exists
+- [ ] T028 [US3] **USER GATE**: with a real key in `.env`, run `--llm` once and read 3 model reasons aloud against the rubric. Skip until a key exists. None existed on 2026-10-10
 
 ---
 
@@ -129,4 +129,4 @@ T001 → T004 → T005..T013 → T014 (user) → T015 (user) → T016..T022 → 
 1. **Tonight, before stop point 1 (2:00 am)**: Setup and Foundational need no rubric and can run while the user writes `rubric.md`. That is the best use of the wait.
 2. **MVP = US1** (through T022). A committed report is a complete deliverable.
 3. **Next**: US2 (small, data is already loaded), then Polish T029 to T032.
-4. **Saturday, October 10**: US3 if an API key exists, then the eval harness as its own spec.
+4. **After stop point 1**: T028 once an API key exists, then the eval harness as its own spec, checked against constitution v1.2.0. The harness did not start on 2026-10-10 as first scheduled.

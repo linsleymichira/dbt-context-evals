@@ -6,7 +6,7 @@
 
 **Status**: Draft
 
-**Input**: User description: repository feature brief for the context coverage scorecard. Scoped to MVP 3, the context coverage scorecard (plan § 3 and § 4, step 3). MVP 1, the context-change eval harness, is a separate feature.
+**Input**: User description: repository feature brief for the context coverage scorecard. Scoped to MVP 3, the context coverage scorecard (step 3 of the project plan's build spec). MVP 1, the context-change eval harness, is a separate feature.
 
 ## Clarifications
 
@@ -115,4 +115,4 @@ The author can opt in to a language-model grader for the parts that need judgmen
 - Staging and mart models are scored the same way and reported separately by model.
 - The baseline is commit `e68d4c3`. Description rewrites happen after the scorecard ships and are scored against their own commits.
 - The model grader, when used, needs an API key in a gitignored environment file. No key is needed for the default run.
-- Plan § 5 says the sample is kept out of the repo by submodule or gitignore. That was superseded on 2026-10-06: the sample is now vendored and tracked (commit `e68d4c3`).
+- An earlier draft of the project plan kept the sample out of the repo by submodule or gitignore. That was superseded on 2026-10-06: the sample is now vendored and tracked (commit `e68d4c3`).
