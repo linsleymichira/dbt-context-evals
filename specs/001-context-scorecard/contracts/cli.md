@@ -4,7 +4,7 @@
 
 ```shell
 .venv/bin/python score_context.py          # rule grades only
-.venv/bin/python score_context.py --llm    # adds model grades for the 2 judgment parts
+.venv/bin/python score_context.py --llm    # adds model grades for the 2 judgment parts, in its own file
 ```
 
 Run from the repo root. No other flags in v1.
@@ -14,7 +14,7 @@ Run from the repo root. No other flags in v1.
 1. Check `rubric.md` for unwritten sections.
 2. Refresh: `dbt build`, then `dbt docs generate`, against `jaffle-shop/`.
 3. With `--llm`: check that `anthropic` is importable and `ANTHROPIC_API_KEY` is set.
-4. Grade, render, print to stdout, write `results/<short-sha>[-dirty].md`.
+4. Grade, render, print to stdout, write `results/<short-sha>[-dirty].md`. With `--llm` the file is `results/<short-sha>[-dirty]-llm.md`, and the default file is left untouched, because model wording changes between runs and the default report must stay byte-identical (changed 2026-10-10).
 
 ## Exit codes
 

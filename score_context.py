@@ -6,6 +6,7 @@ See specs/001-context-scorecard/ for the spec, plan, and CLI contract.
 """
 
 import json
+import os
 import re
 import subprocess
 import sys
@@ -16,6 +17,7 @@ REPO_ROOT = Path(__file__).resolve().parent
 PROJECT_DIR = REPO_ROOT / "jaffle-shop"
 RUBRIC_PATH = REPO_ROOT / "rubric.md"
 RESULTS_DIR = REPO_ROOT / "results"
+ENV_PATH = REPO_ROOT / ".env"
 PACKAGE = "jaffle_shop"
 DBT = str(Path(sys.executable).parent / "dbt")
 
@@ -62,6 +64,9 @@ RULE_SUMMARIES = {
     ),
 }
 HEURISTIC_PARTS = frozenset({"business_meaning", "interpretation_guidance"})
+API_KEY_NAME = "ANTHROPIC_API_KEY"
+MODEL_ENV_NAME = "SCORECARD_MODEL"
+DEFAULT_MODEL = "claude-sonnet-5-5"
 PART_TITLES = {
     "business_meaning": "Business meaning",
     "allowed_values": "Allowed values",
@@ -111,6 +116,10 @@ class RefreshFailed(Exception):
     """dbt build or dbt docs generate exited nonzero."""
 
 
+class LlmUnavailable(Exception):
+    """--llm was passed but the anthropic package or the key is missing."""
+
+
 @dataclass(frozen=True)
 class Column:
     model: str
@@ -128,7 +137,7 @@ class Grade:
     model: str
     name: str
     part: str
-    outcome: str  # pass, fail, or n/a
+    outcome: str  # pass, fail, or n/a (a model grade can be unreadable)
     reason: str
     grader: str = "rule"
 
@@ -438,6 +447,103 @@ def grade_all(columns):
     )
 
 
+# --- model grader ---------------------------------------------------------
+
+
+def _api_key():
+    """The key from the environment, else from the gitignored .env."""
+    key = os.environ.get(API_KEY_NAME, "").strip()
+    if key or not ENV_PATH.exists():
+        return key
+    for line in ENV_PATH.read_text().splitlines():
+        name, _, value = line.partition("=")
+        if name.strip() == API_KEY_NAME:
+            return value.strip().strip("'\"")
+    return ""
+
+
+def model_client():
+    """An Anthropic client, or LlmUnavailable naming what is missing.
+
+    The import lives here so a default run never loads the package
+    (research.md R8).
+    """
+    try:
+        import anthropic
+    except ImportError:
+        raise LlmUnavailable(
+            "--llm needs the anthropic package: run uv sync --all-extras"
+        ) from None
+    key = _api_key()
+    if not key:
+        raise LlmUnavailable(
+            f"--llm needs {API_KEY_NAME} in the environment or in .env"
+        )
+    return anthropic.Anthropic(api_key=key)
+
+
+def _model_prompt(sentence, column):
+    return (
+        "You are grading one dbt column description against one rubric "
+        "sentence.\n\n"
+        f"Rubric sentence: {' '.join(sentence.split())}\n"
+        f"Model: {column.model}\n"
+        f"Column: {column.name}\n"
+        f"Description: {column.description}\n\n"
+        "Reply with only a JSON object: "
+        '{"grade": "pass" or "fail", "reason": one sentence}.'
+    )
+
+
+def _model_verdict(text):
+    """(outcome, reason) from the model's reply, never a guessed grade."""
+    found = re.search(r"\{.*\}", text, flags=re.S)
+    try:
+        reply = json.loads(found.group()) if found else {}
+    except json.JSONDecodeError:
+        reply = {}
+    grade = str(reply.get("grade", "")).lower()
+    reason = " ".join(str(reply.get("reason", "")).split())
+    if grade not in ("pass", "fail") or not reason:
+        return "unreadable", "model reply was not the expected JSON"
+    return grade, reason
+
+
+def grade_with_model(client, rubric, columns, grades):
+    """One model Grade per judgment part of every documented column.
+
+    Rule grades are read only to skip n/a parts. Nothing here feeds a
+    pass rate (FR-009).
+    """
+    model = os.environ.get(MODEL_ENV_NAME) or DEFAULT_MODEL
+    by_column = _by_column(grades)
+
+    def verdict(column, part):
+        response = client.messages.create(
+            model=model,
+            max_tokens=200,
+            messages=[
+                {
+                    "role": "user",
+                    "content": _model_prompt(rubric[part], column),
+                }
+            ],
+        )
+        text = "".join(
+            block.text for block in response.content if block.type == "text"
+        )
+        return _model_verdict(text)
+
+    return tuple(
+        Grade(column.model, column.name, part, *verdict(column, part), "model")
+        for column in sorted(columns, key=lambda c: (c.model, c.name))
+        if column.status == "documented"
+        for part in PARTS
+        if part in HEURISTIC_PARTS
+        and by_column[(column.model, column.name)][part].outcome != "n/a"
+    )
+
+
 # --- report ---------------------------------------------------------------
 
 
@@ -506,15 +612,32 @@ def _column_row(column, parts):
     ]
 
 
+def _model_cells(parts):
+    """The model grade and model reason cells for one column."""
+    judged = [part for part in PARTS if part in parts]
+    return [
+        ". ".join(f"{PART_TITLES[p]}: {parts[p].outcome}" for p in judged),
+        ". ".join(
+            f"{PART_TITLES[p]}: {parts[p].reason.replace('|', '/')}"
+            for p in judged
+        ),
+    ]
+
+
 def _name_list(label, columns):
     names = ", ".join(f"`{c.model}.{c.name}`" for c in columns) or "none"
     return f"{label} ({len(columns)}): {names}"
 
 
-def render_report(label, rubric, columns, grades):
-    """The Markdown report, in the section order of contracts/cli.md."""
+def render_report(label, rubric, columns, grades, model_grades=None):
+    """The Markdown report, in the section order of contracts/cli.md.
+
+    model_grades is None on a default run. With --llm it adds two cells
+    to each row of the per-column table and changes nothing else.
+    """
     columns = sorted(columns, key=lambda c: (c.model, c.name))
     by_column = _by_column(grades)
+    by_model_grade = _by_column(model_grades or ())
     graded = [c for c in columns if (c.model, c.name) in by_column]
     column_header = [
         "Model",
@@ -575,8 +698,21 @@ def render_report(label, rubric, columns, grades):
         _name_list("Stale", [c for c in columns if c.status == "stale"]),
         "## Columns",
         _table(
-            column_header,
-            [_column_row(c, by_column[(c.model, c.name)]) for c in graded],
+            column_header
+            + (
+                [] if model_grades is None else ["Model grade", "Model reason"]
+            ),
+            [
+                _column_row(c, by_column[(c.model, c.name)])
+                + (
+                    []
+                    if model_grades is None
+                    else _model_cells(
+                        by_model_grade.get((c.model, c.name), {})
+                    )
+                )
+                for c in graded
+            ],
         ),
         "## Examples",
         _table(
@@ -599,8 +735,9 @@ def render_report(label, rubric, columns, grades):
 # --- entry point ----------------------------------------------------------
 
 
-def main():
+def main(argv=None):
     """Rubric check, refresh, grade, print and write (contracts/cli.md)."""
+    use_llm = "--llm" in (sys.argv[1:] if argv is None else argv)
     try:
         rubric = load_rubric(RUBRIC_PATH)
     except RubricUnwritten as error:
@@ -611,16 +748,28 @@ def main():
     except RefreshFailed as error:
         print(error, file=sys.stderr)
         return 3
+    try:
+        client = model_client() if use_llm else None
+    except LlmUnavailable as error:
+        print(error, file=sys.stderr)
+        return 4
     target = PROJECT_DIR / "target"
     columns = load_columns(
         json.loads((target / "manifest.json").read_text()),
         json.loads((target / "catalog.json").read_text()),
     )
     label = commit_label()
-    report = render_report(label, rubric, columns, grade_all(columns))
+    grades = grade_all(columns)
+    model_grades = (
+        grade_with_model(client, rubric, columns, grades) if use_llm else None
+    )
+    report = render_report(label, rubric, columns, grades, model_grades)
     print(report, end="")
     RESULTS_DIR.mkdir(exist_ok=True)
-    (RESULTS_DIR / f"{label}.md").write_text(report)
+    # Model wording varies between runs, so it never lands in the
+    # deterministic report for the commit.
+    name = f"{label}-llm.md" if use_llm else f"{label}.md"
+    (RESULTS_DIR / name).write_text(report)
     return 0
 
 
