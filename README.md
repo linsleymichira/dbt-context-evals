@@ -2,7 +2,7 @@
 
 A scorecard for dbt column descriptions, read as context for an agent that writes SQL. One command grades every built column on four parts and prints the coverage.
 
-The four parts come from LangChain's post "How LangChain Built an Agent-First Data Stack" (July 27, 2026), which holds up one `account_status` description as the standard: it names the source system, defines each value and gives a default filter. The test subject here is dbt Labs' public `jaffle_shop_duckdb` sample, vendored under `jaffle-shop/` with its descriptions untouched.
+The four parts come from LangChain's post "How LangChain Built an Agent-First Data Stack" (July 27, 2026). The post holds up one `account_status` description as the standard. That description names the source system, defines each value and gives a default filter. The sample is dbt Labs' public `jaffle_shop_duckdb` project, vendored under `jaffle-shop/` with its descriptions untouched.
 
 ## Run it
 
@@ -15,16 +15,16 @@ The command runs `dbt build` and `dbt docs generate`, grades every column, print
 
 ## The rubric
 
-Each sentence is from [`rubric.md`](rubric.md). The rule beside it is what the code checks.
+Each sentence is from [`rubric.md`](rubric.md). The rule beside it is what the code applies.
 
-|Part|A description passes when|What the code checks|
+|Part|A description passes when|The rule|
 |---|---|---|
 |Business meaning|It gives the definition this business has agreed on for the column, which another company might define differently, and does more than restate the column name.|At least 2 content words that are not in the column name and are not filler. A key column must name the table it joins to.|
 |Allowed values|A categorical column lists every expected value and what each one means, and a numeric or date column states the range or kind of values to expect. A data type alone never passes.|A column with an `accepted_values` test names every tested value. A numeric or date column has a unit code in parentheses, a unit word or an explicit range.|
 |Interpretation guidance|It says how to read the column correctly and names at least one case where the obvious reading is wrong.|A caveat phrase: unless, except, excluding, does not include, not the same as, even if, only when.|
 |Default filter|It says which rows to include or exclude by default, and when to override that.|A filter phrase (filter to, exclude, include only, by default) and an override phrase (unless, except when, only if).|
 
-A key column skips allowed values and default filter. A free-text column skips allowed values. Skipped parts are left out of every pass rate.
+A key column skips allowed values and default filter. A free-text column skips allowed values. A skipped part shows as `n/a` and does not count in any pass rate.
 
 ## What the sample scores
 
@@ -78,17 +78,17 @@ Why each one lands where it does:
 
 ## Read the numbers as a heuristic
 
-These grades are rule-based pattern checks, not a judgment of quality. Allowed values and default filter are close to mechanical. Business meaning and interpretation guidance need judgment, and the code can only look for signs of it, so the report marks both as heuristic. A description could pass interpretation guidance with the word "unless" and still say nothing useful, and a good caveat phrased another way would fail.
+These grades come from pattern rules, not from a judgment of quality. Allowed values and default filter are close to mechanical. Business meaning and interpretation guidance need judgment, and the code can only look for signs of it, so the report marks both as heuristic. A description could pass interpretation guidance with the word "unless" and still say nothing useful, and a good caveat phrased another way would fail.
 
-`--llm` adds a model's grade and one-sentence reason beside the rule grade for those two parts. It needs `ANTHROPIC_API_KEY` in the environment or in a gitignored `.env`. The model is a second opinion. It never changes a rule grade or a pass rate, and its report goes to `results/<commit>-llm.md`, so the repeatable report for the commit is never overwritten.
+`--llm` adds a model's grade and one-sentence reason beside the rule grade for those two parts. It needs `ANTHROPIC_API_KEY` in the environment or in a gitignored `.env`. The model is a second opinion. It never changes a rule grade or a pass rate. Its report goes to `results/<commit>-llm.md`, so the repeatable report for the commit is never overwritten.
 
 ## Layout
 
 |Path|What it is|
 |---|---|
-|`rubric.md`|The four parts and the not-applicable rule, one sentence each|
+|`rubric.md`|The four parts and when a column skips one, one sentence each|
 |`score_context.py`|The scorecard|
 |`results/`|One committed report per scored commit|
-|`jaffle-shop/`|The vendored dbt project under test|
+|`jaffle-shop/`|The sample, vendored|
 |`tests/`|`.venv/bin/python -m pytest`|
 |`specs/001-context-scorecard/`|Spec, plan, CLI contract and tasks|

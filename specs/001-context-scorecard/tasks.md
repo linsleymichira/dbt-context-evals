@@ -98,7 +98,7 @@ description: "Task list for the Context Coverage Scorecard"
 
 - [X] T029 [P] Run `ruff check --fix` and `ruff format` on `score_context.py` and `tests/`, then `ruff check` clean
 - [X] T030 [P] Add the scorecard command and `uv sync` to the Commands section of `CLAUDE.md`
-- [ ] T031 Draft the README scorecard section in `README.md` with the user (plan step 4): the rubric, the coverage tables from the committed report, the 3 to 5 examples, and the heuristic note. The user edits the wording
+- [X] T031 Draft the README scorecard section in `README.md` with the user (plan step 4): the rubric, the coverage tables from the committed report, the 3 to 5 examples, and the heuristic note. The user edits the wording
 - [X] T032 Run the employer-data check from the vault plan (`grep -riE "jdna|finish line|workday|employee"` over tracked files) and confirm it returns nothing (SC-006). Run 2026-10-10: 2 hits, both the check's own wording (this line and `spec.md` SC-006), 0 anywhere else
 - [ ] T033 Run all 8 quickstart.md scenarios end to end and report each result, including scenario 8, the user's out-loud walkthrough (SC-003)
 
