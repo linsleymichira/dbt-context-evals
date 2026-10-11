@@ -13,6 +13,8 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
+import yaml
+
 REPO_ROOT = Path(__file__).resolve().parent
 PROJECT_DIR = REPO_ROOT / "jaffle-shop"
 RUBRIC_PATH = REPO_ROOT / "rubric.md"
@@ -121,6 +123,14 @@ class LlmUnavailable(Exception):
 
 
 @dataclass(frozen=True)
+class Location:
+    """Where a description is written. For navigation only, never grading."""
+
+    path: str  # relative to the repo root
+    line: int | None = None  # None when the location is a whole file
+
+
+@dataclass(frozen=True)
 class Column:
     model: str
     name: str
@@ -130,8 +140,7 @@ class Column:
     facts: frozenset
     data_type: str | None
     accepted_values: tuple = ()
-    path: str = ""  # file that defines the column, relative to the project
-    line: int | None = None
+    location: Location | None = None
 
 
 @dataclass(frozen=True)
@@ -250,33 +259,90 @@ def _column_facts(nodes, model_id):
     }
 
 
-YAML_NAME = re.compile(r"""^(\s*)-\s+name:\s*['"]?([^'"\s#]+)""")
+def _mapping_value(node, key):
+    """The value node under key in a composed YAML mapping, or None."""
+    if not isinstance(node, yaml.MappingNode):
+        return None
+    for key_node, value_node in node.value:
+        if key_node.value == key:
+            return value_node
+    return None
+
+
+def _named_entries(sequence):
+    """(name, line, entry) for each named entry of a composed YAML list."""
+    if not isinstance(sequence, yaml.SequenceNode):
+        return
+    for entry in sequence.value:
+        name = _mapping_value(entry, "name")
+        if name is not None:
+            yield name.value, name.start_mark.line + 1, entry
 
 
 def find_column_line(text, model, column):
-    """The 1-based line of a column's entry under its model, or None.
+    """The 1-based line of a column's name under its model, or None.
 
-    Two models often share a column name, so the column only matches
-    while the scan is inside the named model's block.
+    Two models often share a column name, so the file is parsed and the
+    column is looked up inside the named model only.
     """
-    model_indent = None
-    in_model = False
-    for number, line in enumerate(text.splitlines(), 1):
-        found = YAML_NAME.match(line)
-        if not found:
+    models = _mapping_value(yaml.compose(text), "models")
+    for model_name, _, entry in _named_entries(models):
+        if model_name != model:
             continue
-        indent, name = len(found.group(1)), found.group(2)
-        if model_indent is None or indent <= model_indent:
-            model_indent = indent
-            in_model = name == model
-        elif in_model and name.lower() == column:
+        columns = _mapping_value(entry, "columns")
+        for column_name, line, _ in _named_entries(columns):
+            if column_name.lower() == column:
+                return line
+    return None
+
+
+def find_block_line(text, name):
+    """The 1-based line that opens the docs block called name, or None."""
+    opener = re.compile(rf"\{{%-?\s*docs\s+{re.escape(name)}\s*-?%\}}")
+    for number, line in enumerate(text.splitlines(), 1):
+        if opener.search(line):
             return number
     return None
 
 
-def _model_columns(model_id, node, nodes, catalog_nodes, read=None):
+def _repo_path(project_path):
+    return f"{PROJECT_DIR.name}/{project_path}"
+
+
+def _column_location(node, column, docs, schema_path, read):
+    """Where one column's description is written (spec 002, research R2)."""
+    entry = node["columns"].get(column)
+    if entry is None or not schema_path:
+        # Built by the SQL and declared in no schema file.
+        sql_path = node.get("original_file_path")
+        return Location(_repo_path(sql_path)) if sql_path else None
+    blocks = entry.get("doc_blocks") or []
+    block = docs.get(blocks[0]) if len(blocks) == 1 else None
+    if block and block.get("original_file_path"):
+        # The words that were graded live in the block, not in the schema.
+        path = block["original_file_path"]
+        line = None
+        if read:
+            try:
+                line = find_block_line(read(path), block["name"])
+            except OSError:
+                # Same rule as the schema file: keep the file, lose the line.
+                pass
+        return Location(_repo_path(path), line)
+    if read:
+        try:
+            schema_text = read(schema_path)
+        except OSError:
+            schema_text = ""
+        line = find_column_line(schema_text, node["name"], column.lower())
+    else:
+        line = None
+    return Location(_repo_path(schema_path), line)
+
+
+def _model_columns(model_id, node, nodes, catalog_nodes, docs, read=None):
     schema_path = (node.get("patch_path") or "").partition("://")[2]
-    schema_text = read(schema_path) if read and schema_path else ""
+    declared = {name.lower(): name for name in node["columns"]}
     documented = {
         name.lower(): col.get("description") or ""
         for name, col in node["columns"].items()
@@ -298,12 +364,6 @@ def _model_columns(model_id, node, nodes, catalog_nodes, read=None):
             status = "documented"
         else:
             status = "undocumented"
-        if name in documented and schema_path:
-            path = schema_path
-            line = find_column_line(schema_text, node["name"], name)
-        else:
-            # Built by the SQL and absent from the YAML.
-            path, line = node.get("original_file_path") or "", None
         yield Column(
             model=node["name"],
             name=name,
@@ -313,8 +373,9 @@ def _model_columns(model_id, node, nodes, catalog_nodes, read=None):
             facts=facts.get(name, frozenset()),
             data_type=built.get(name),
             accepted_values=values.get(name, ()),
-            path=path,
-            line=line,
+            location=_column_location(
+                node, declared.get(name, name), docs, schema_path, read
+            ),
         )
 
 
@@ -322,7 +383,7 @@ def load_columns(manifest, catalog, read=None):
     """Every built or documented column of the project's models, sorted.
 
     read takes a project-relative path and returns the file's text. With
-    it, each column documented in a schema file gets its line number.
+    it, each location carries the line where the description is written.
     """
     nodes = manifest["nodes"]
     columns = (
@@ -331,7 +392,12 @@ def load_columns(manifest, catalog, read=None):
         if node.get("resource_type") == "model"
         and node.get("package_name") == PACKAGE
         for column in _model_columns(
-            model_id, node, nodes, catalog.get("nodes", {}), read
+            model_id,
+            node,
+            nodes,
+            catalog.get("nodes", {}),
+            manifest.get("docs", {}),
+            read,
         )
     )
     return tuple(sorted(columns, key=lambda c: (c.model, c.name)))
@@ -630,26 +696,42 @@ def _table(header, rows):
     return "\n".join("|" + "|".join(cells) + "|" for cells in lines)
 
 
-def _rate(grades):
+def _counts(grades):
+    """(passed, applicable, whole-number percent or None) for some grades."""
     applicable = [g for g in grades if g.outcome != "n/a"]
-    passes = sum(g.outcome == "pass" for g in applicable)
-    percent = f"{100 * passes / len(applicable):.0f}%" if applicable else "n/a"
-    return [str(passes), str(len(applicable)), percent]
+    passed = sum(g.outcome == "pass" for g in applicable)
+    percent = (
+        int(f"{100 * passed / len(applicable):.0f}") if applicable else None
+    )
+    return passed, len(applicable), percent
+
+
+def _rate(grades):
+    passed, applicable, percent = _counts(grades)
+    shown = "n/a" if percent is None else f"{percent}%"
+    return [str(passed), str(applicable), shown]
 
 
 def _link(text, column):
-    """text as a link to the column's definition, relative to results/."""
-    if not column.path:
+    """text as a link to the column's location, relative to results/."""
+    where = column.location
+    if where is None:
         return text
-    anchor = f"#L{column.line}" if column.line else ""
-    return f"[{text}](../{PROJECT_DIR.name}/{column.path}{anchor})"
+    anchor = f"#L{where.line}" if where.line else ""
+    return f"[{text}](../{where.path}{anchor})"
 
 
 def _column_row(column, parts):
+    # A reason shared by several parts is written once (spec 002, FR-016).
+    failed_parts = {}
+    for part in PARTS:
+        if parts[part].outcome == "fail":
+            failed_parts.setdefault(parts[part].reason, []).append(
+                PART_TITLES[part]
+            )
     reasons = ". ".join(
-        f"{PART_TITLES[part]}: {parts[part].reason}"
-        for part in PARTS
-        if parts[part].outcome == "fail"
+        f"{', '.join(titles)}: {reason}"
+        for reason, titles in failed_parts.items()
     )
     return [
         column.model,
@@ -700,15 +782,16 @@ def render_report(label, rubric, columns, grades, model_grades=None):
         f"# Context coverage scorecard at `{label}`",
         *(
             [
-                "Warning: the working tree had uncommitted changes, so "
-                "this report does not match a commit."
+                "Warning: do not cite this report. The working tree had "
+                "uncommitted changes, so the grades do not match a commit."
             ]
             if label.endswith("-dirty")
             else []
         ),
-        "These grades come from rule-based checks and are a heuristic, "
-        "not a judgment of quality. Business meaning and interpretation "
-        "guidance are pattern checks and are marked heuristic below.",
+        "These grades come from rules and are a heuristic, not a "
+        "judgment of quality. The rules for business meaning and "
+        "interpretation guidance match patterns, and the rubric table "
+        "marks them as heuristic.",
         "## Rubric",
         _table(
             ["Part", "Rubric sentence", "Rule", "Heuristic"],
@@ -782,6 +865,106 @@ def render_report(label, rubric, columns, grades, model_grades=None):
     return "\n\n".join(sections) + "\n"
 
 
+# --- data file ------------------------------------------------------------
+
+
+def _rate_entry(key, name, grades):
+    passed, applicable, percent = _counts(grades)
+    return {
+        key: name,
+        "passed": passed,
+        "applicable": applicable,
+        "rate": percent,
+    }
+
+
+def _grade_entry(grade, model_grade):
+    entry = {"outcome": grade.outcome, "reason": grade.reason}
+    if model_grade is not None:
+        entry["model_grade"] = {
+            "outcome": model_grade.outcome,
+            "reason": model_grade.reason,
+        }
+    return entry
+
+
+def _qualified(columns, status):
+    return [f"{c.model}.{c.name}" for c in columns if c.status == status]
+
+
+def build_result(label, rubric, columns, grades, model_grades=None):
+    """Everything one run found, as plain data (spec 002, contracts).
+
+    It takes the same inputs as render_report, so the data file and the
+    Markdown report cannot be built from different grades.
+    """
+    columns = sorted(columns, key=lambda c: (c.model, c.name))
+    by_column = _by_column(grades)
+    by_model_grade = _by_column(model_grades or ())
+    return {
+        "schema_version": 1,
+        "commit": label,
+        "dirty": label.endswith("-dirty"),
+        "rubric": [
+            {
+                "part": key,
+                "applies_to": "column",
+                "sentence": " ".join(rubric[key].split()),
+                "rule": RULE_SUMMARIES[key],
+                "heuristic": key in HEURISTIC_PARTS,
+            }
+            for key in RUBRIC_SECTIONS
+        ],
+        "pass_rates": {
+            "by_part": [
+                _rate_entry(
+                    "part", part, (g for g in grades if g.part == part)
+                )
+                for part in PARTS
+            ],
+            "by_model": [
+                _rate_entry(
+                    "model", model, (g for g in grades if g.model == model)
+                )
+                for model in sorted({g.model for g in grades})
+            ],
+        },
+        "drift": {
+            "undocumented_columns": _qualified(columns, "undocumented"),
+            "stale_columns": _qualified(columns, "stale"),
+        },
+        "columns": [
+            {
+                "model": c.model,
+                "column": c.name,
+                "status": c.status,
+                "pii": c.pii,
+                "description": c.description,
+                "location": (
+                    None
+                    if c.location is None
+                    else {"path": c.location.path, "line": c.location.line}
+                ),
+                "grades": {
+                    part: _grade_entry(
+                        parts[part],
+                        by_model_grade.get((c.model, c.name), {}).get(part),
+                    )
+                    for parts in [by_column.get((c.model, c.name), {})]
+                    for part in PARTS
+                    if part in parts
+                },
+            }
+            for c in columns
+        ],
+    }
+
+
+def render_json(result):
+    """The data file's text. Same result, same bytes."""
+    return json.dumps(result, indent=2, ensure_ascii=False) + "\n"
+
+
 # --- entry point ----------------------------------------------------------
 
 
@@ -818,9 +1001,11 @@ def main(argv=None):
     print(report, end="")
     RESULTS_DIR.mkdir(exist_ok=True)
     # Model wording varies between runs, so it never lands in the
-    # deterministic report for the commit.
-    name = f"{label}-llm.md" if use_llm else f"{label}.md"
-    (RESULTS_DIR / name).write_text(report)
+    # deterministic pair of files for the commit.
+    stem = f"{label}-llm" if use_llm else label
+    result = build_result(label, rubric, columns, grades, model_grades)
+    (RESULTS_DIR / f"{stem}.json").write_text(render_json(result))
+    (RESULTS_DIR / f"{stem}.md").write_text(report)
     return 0
 
 

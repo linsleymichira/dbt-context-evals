@@ -22,7 +22,7 @@ description: "Task list for the scorecard report with links, a data file and tab
 
 ## Phase 1: Foundational
 
-- [ ] T001 Add a `located` fixture to `tests/conftest.py`: a documentation file, a shared documentation block and a manifest that names both, written under `tmp_path`, with known line numbers and one column name declared in two models
+- [X] T001 Add a `located` fixture to `tests/conftest.py`: a documentation file, a shared documentation block and a manifest that names both, written under `tmp_path`, with known line numbers and one column name declared in two models. Done differently: the fixtures live in `tests/test_links.py` and `tests/test_result.py`, where they are used, and `conftest.py` is unchanged
 
 ---
 
@@ -30,10 +30,10 @@ description: "Task list for the scorecard report with links, a data file and tab
 
 **Independent Test**: quickstart.md scenarios 3, 5 and 6.
 
-- [ ] T002 [P] [US1] Write failing tests in `tests/test_locations.py` for each case in research R2: a declared column, the same column name in a second model, a shared block, an undeclared built column, a stale column, a table, a model with no documentation file, and an unreadable file that must not stop the run (FR-001 to FR-004)
-- [ ] T003 [US1] Implement `Location`, `find_locations()` and the `location` field on `Column` in `score_context.py` to pass T002, with line marks from PyYAML (research R1)
-- [ ] T004 [P] [US1] Add failing tests to `tests/test_locations.py` for the Markdown: the Column cell and the drift lists link to `../<path>#L<line>`, a row with no location shows the plain name, and no output holds an absolute path (FR-003)
-- [ ] T005 [US1] Extend `render_report()` and `main()` in `score_context.py` to pass T004
+- [X] T002 [P] [US1] Write failing tests in `tests/test_locations.py` for each case in research R2: a declared column, the same column name in a second model, a shared block, an undeclared built column, a stale column, a table, a model with no documentation file, and an unreadable file that must not stop the run (FR-001 to FR-004). Built in `tests/test_links.py`, with the reader passed in as `load_columns(..., read=)`. Table locations wait for User Story 3
+- [X] T003 [US1] Implement `Location`, `find_locations()` and the `location` field on `Column` in `score_context.py` to pass T002, with line marks from PyYAML (research R1)
+- [X] T004 [P] [US1] Add failing tests to `tests/test_locations.py` for the Markdown: the Column cell and the drift lists link to `../<path>#L<line>`, a row with no location shows the plain name, and no output holds an absolute path (FR-003)
+- [X] T005 [US1] Extend `render_report()` and `main()` in `score_context.py` to pass T004
 
 ---
 
@@ -41,10 +41,10 @@ description: "Task list for the scorecard report with links, a data file and tab
 
 **Independent Test**: quickstart.md scenarios 1 to 4 and 8.
 
-- [ ] T006 [P] [US2] Write failing tests in `tests/test_result.py`: the result holds every field in contracts/report.md, a stale column has no grades, rendering twice gives identical JSON text, and every grade, reason, rate and location in the result appears in the Markdown for the same inputs (FR-005 to FR-007, SC-003)
-- [ ] T007 [US2] Implement `build_result()` and `render_json()` in `score_context.py` to pass T006
-- [ ] T008 [P] [US2] Add failing tests to `tests/test_result.py` and `tests/test_llm.py`: a default run writes the `.md` and `.json` pair, a `--llm` run writes the `-llm` pair with model grades and leaves the default pair untouched, and an early exit writes neither file (FR-008, FR-009)
-- [ ] T009 [US2] Extend `main()` in `score_context.py` to pass T008
+- [X] T006 [P] [US2] Write failing tests in `tests/test_result.py`: the result holds every field in contracts/report.md, a stale column has no grades, rendering twice gives identical JSON text, and every grade, reason, rate and location in the result appears in the Markdown for the same inputs (FR-005 to FR-007, SC-003)
+- [X] T007 [US2] Implement `build_result()` and `render_json()` in `score_context.py` to pass T006
+- [X] T008 [P] [US2] Add failing tests to `tests/test_result.py` and `tests/test_llm.py`: a default run writes the `.md` and `.json` pair, a `--llm` run writes the `-llm` pair with model grades and leaves the default pair untouched, and an early exit writes neither file (FR-008, FR-009)
+- [X] T009 [US2] Extend `main()` in `score_context.py` to pass T008
 
 ---
 
@@ -52,16 +52,16 @@ description: "Task list for the scorecard report with links, a data file and tab
 
 **Independent Test**: quickstart.md scenario 7.
 
-- [ ] T010 [P] [US4] Write failing tests in `tests/test_wording.py`: the notice never says "check", the dirty warning starts with a command and then gives the reason, no sentence the scorecard writes on its own passes 25 words, and a reason shared by several parts of one row is written once (FR-015, FR-016)
-- [ ] T011 [US4] Change the notice, the warning and the reason cell in `score_context.py` to pass T010 (research R7), and update any feature 001 test that asserts the old wording
+- [X] T010 [P] [US4] Write failing tests in `tests/test_wording.py`: the notice never says "check", the dirty warning starts with a command and then gives the reason, no sentence the scorecard writes on its own passes 25 words, and a reason shared by several parts of one row is written once (FR-015, FR-016)
+- [X] T011 [US4] Change the notice, the warning and the reason cell in `score_context.py` to pass T010 (research R7), and update any feature 001 test that asserts the old wording
 
 ---
 
 ## Phase 5: Polish for the stories built now
 
-- [ ] T012 [P] Run `ruff check --fix` and `ruff format` on `score_context.py` and `tests/`, then `ruff check` clean
-- [ ] T013 [P] Update the scorecard lines in `CLAUDE.md` and the file names in `specs/001-context-scorecard/contracts/cli.md` step 4 to name the `.json` file
-- [ ] T014 Run quickstart.md scenarios 1 to 4 and 6 to 9 and report each result
+- [X] T012 [P] Run `ruff check --fix` and `ruff format` on `score_context.py` and `tests/`, then `ruff check` clean
+- [X] T013 [P] Update the scorecard lines in `CLAUDE.md` and the file names in `specs/001-context-scorecard/contracts/cli.md` step 4 to name the `.json` file
+- [X] T014 Run quickstart.md scenarios 1 to 4 and 6 to 9 and report each result
 - [ ] T015 **USER GATE**: commit the code, then run the scorecard on the clean tree and commit the first `results/<sha>.md` and `results/<sha>.json` pair
 - [ ] T016 Refresh `README.md` from that report: the report link, the data file, and one sentence on the links. The user edits the wording (FR-018)
 - [ ] T017 **USER GATE**: after the push, run quickstart.md scenario 5 by clicking 3 links on GitHub

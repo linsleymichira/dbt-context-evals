@@ -14,7 +14,7 @@ Run from the repo root. No other flags in v1.
 1. Check `rubric.md` for unwritten sections.
 2. Refresh: `dbt build`, then `dbt docs generate`, against `jaffle-shop/`.
 3. With `--llm`: check that `anthropic` is importable and `ANTHROPIC_API_KEY` is set.
-4. Grade, render, print to stdout, write `results/<short-sha>[-dirty].md`. With `--llm` the file is `results/<short-sha>[-dirty]-llm.md`, and the default file is left untouched, because model wording changes between runs and the default report must stay byte-identical (changed 2026-10-10).
+4. Grade, render, print to stdout, write `results/<short-sha>[-dirty].md`. With `--llm` the file is `results/<short-sha>[-dirty]-llm.md`, and the default file is left untouched, because model wording changes between runs and the default report must stay byte-identical (changed 2026-10-10). Feature 002 adds a `.json` data file beside each report, see [its report contract](../../002-report-links-tables/contracts/report.md).
 
 ## Exit codes
 

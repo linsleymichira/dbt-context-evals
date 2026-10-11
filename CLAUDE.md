@@ -35,8 +35,8 @@ Python dependencies are declared in the root `pyproject.toml` (a uv project with
 
 ```shell
 uv sync --all-extras
-.venv/bin/python score_context.py                   # scorecard: prints and writes results/<sha>.md
-.venv/bin/python score_context.py --llm             # model grades to results/<sha>-llm.md, needs ANTHROPIC_API_KEY
+.venv/bin/python score_context.py                   # scorecard: prints, writes results/<sha>.md and .json
+.venv/bin/python score_context.py --llm             # model grades to results/<sha>-llm.md and .json, needs ANTHROPIC_API_KEY
 .venv/bin/python -m pytest                          # all tests
 .venv/bin/python -m pytest tests/test_columns.py -k pii   # one test
 ruff check score_context.py tests/ && ruff format score_context.py tests/

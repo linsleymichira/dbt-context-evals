@@ -207,6 +207,30 @@ def test_a_model_run_never_overwrites_the_committed_report(
     assert "Model grade" in _report(project, "abc1234-llm.md")
 
 
+def test_a_model_run_writes_its_own_data_file(
+    project, fake_anthropic, monkeypatch
+):
+    # A tool reading the default data file must get the same bytes
+    # whether or not anyone ran the model grader on that commit.
+    assert score_context.main([]) == 0
+    default = _report(project, "abc1234.json")
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-test")
+
+    assert score_context.main(["--llm"]) == 0
+
+    assert _report(project, "abc1234.json") == default
+    assert "model_grade" not in default
+    data = json.loads(_report(project, "abc1234-llm.json"))
+    judged = [c for c in data["columns"] if c["status"] == "documented"]
+    assert judged
+    for column in judged:
+        assert column["grades"]["business_meaning"]["model_grade"] == {
+            "outcome": "fail",
+            "reason": "Restates the name.",
+        }
+        assert "model_grade" not in column["grades"]["allowed_values"]
+
+
 def test_the_model_id_defaults_and_can_be_overridden(
     project, fake_anthropic, monkeypatch
 ):
