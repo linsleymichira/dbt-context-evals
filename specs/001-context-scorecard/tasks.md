@@ -88,18 +88,18 @@ description: "Task list for the Context Coverage Scorecard"
 
 **Independent Test**: with the key unset, `--llm` exits 4 and writes nothing. With the key set, 3 columns show model grades and the rule grades are unchanged (quickstart.md scenario 6).
 
-- [ ] T026 [P] [US3] Write failing tests in `tests/test_llm.py` with the client patched: no `--llm` means the `anthropic` package is never imported, a missing package or key exits 4 naming which, model grades appear only for `business_meaning` and `interpretation_guidance`, rule grades and pass rates are identical with and without `--llm`, and the model id comes from `SCORECARD_MODEL` with default `claude-sonnet-5-5` (research.md R8)
-- [ ] T027 [US3] Implement the `--llm` flag, lazy import, `.env` reading and `grade_with_model()` in `score_context.py` to pass T026, with the prompt carrying the user's rubric sentence and the resolved description
+- [X] T026 [P] [US3] Write failing tests in `tests/test_llm.py` with the client patched: no `--llm` means the `anthropic` package is never imported, a missing package or key exits 4 naming which, model grades appear only for `business_meaning` and `interpretation_guidance`, rule grades and pass rates are identical with and without `--llm`, and the model id comes from `SCORECARD_MODEL` with default `claude-sonnet-5-5` (research.md R8)
+- [X] T027 [US3] Implement the `--llm` flag, lazy import, `.env` reading and `grade_with_model()` in `score_context.py` to pass T026, with the prompt carrying the user's rubric sentence and the resolved description
 - [ ] T028 [US3] **USER GATE**: with a real key in `.env`, run `--llm` once and read 3 model reasons aloud against the rubric. Skip until Saturday, October 10 if no key exists
 
 ---
 
 ## Phase 6: Polish
 
-- [ ] T029 [P] Run `ruff check --fix` and `ruff format` on `score_context.py` and `tests/`, then `ruff check` clean
-- [ ] T030 [P] Add the scorecard command and `uv sync` to the Commands section of `CLAUDE.md`
+- [X] T029 [P] Run `ruff check --fix` and `ruff format` on `score_context.py` and `tests/`, then `ruff check` clean
+- [X] T030 [P] Add the scorecard command and `uv sync` to the Commands section of `CLAUDE.md`
 - [ ] T031 Draft the README scorecard section in `README.md` with the user (plan step 4): the rubric, the coverage tables from the committed report, the 3 to 5 examples, and the heuristic note. The user edits the wording
-- [ ] T032 Run the employer-data check from the vault plan (`grep -riE "jdna|finish line|workday|employee"` over tracked files) and confirm it returns nothing (SC-006)
+- [X] T032 Run the employer-data check from the vault plan (`grep -riE "jdna|finish line|workday|employee"` over tracked files) and confirm it returns nothing (SC-006). Run 2026-10-10: 2 hits, both the check's own wording (this line and `spec.md` SC-006), 0 anywhere else
 - [ ] T033 Run all 8 quickstart.md scenarios end to end and report each result, including scenario 8, the user's out-loud walkthrough (SC-003)
 
 ---

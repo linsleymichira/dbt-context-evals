@@ -1,0 +1,4 @@
+{
+  // Prose is never hard-wrapped in this repo, so line length is not checked.
+  "config": { "MD013": false }
+}

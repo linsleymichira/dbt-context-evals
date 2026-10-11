@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 An eval harness for the quality of dbt column descriptions as context for agents. `rubric.md` defines four parts every documented column is scored on (business meaning, allowed values, interpretation guidance, default filter, plus a "not applicable" carve-out). The target standard is the `account_status` example from LangChain's post "How LangChain Built an Agent-First Data Stack" (July 27, 2026): name the source system, define each value, give a default filter.
 
-The scorecard that `rubric.md` refers to does not exist yet.
+The scorecard is `score_context.py` at the repo root. It writes one report per scored commit to `results/`. The eval harness (frozen questions, weak docs against strong docs) does not exist yet.
 
 ## Layout
 
@@ -35,6 +35,8 @@ Python dependencies are declared in the root `pyproject.toml` (a uv project with
 
 ```shell
 uv sync --all-extras
+.venv/bin/python score_context.py                   # scorecard: prints and writes results/<sha>.md
+.venv/bin/python score_context.py --llm             # model grades to results/<sha>-llm.md, needs ANTHROPIC_API_KEY
 .venv/bin/python -m pytest                          # all tests
 .venv/bin/python -m pytest tests/test_columns.py -k pii   # one test
 ruff check score_context.py tests/ && ruff format score_context.py tests/
