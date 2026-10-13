@@ -28,9 +28,9 @@ A key column skips allowed values and default filter. A free-text column skips a
 
 ## What the sample scores
 
-From [`results/1163cc8.md`](results/1163cc8.md), on the sample exactly as dbt Labs ships it: 27 built columns across 5 models. The data file is [`results/1163cc8.json`](results/1163cc8.json). Each column in the report links to the file and line where its description is written. A column with no description links to the place it is defined.
+From [`results/94cff0d.md`](results/94cff0d.md), on the sample exactly as dbt Labs ships it: 27 built columns across 5 models. The data file is [`results/94cff0d.json`](results/94cff0d.json). Each column in the report links to the file and line where its description is written. A column with no description links to the place it is defined.
 
-The first report, [`results/8eabd21.md`](results/8eabd21.md), is kept as the record of the first format. Its pass rates are the same.
+Two earlier reports are kept as the record: [`results/8eabd21.md`](results/8eabd21.md) in the first format, and [`results/1163cc8.md`](results/1163cc8.md) from before tables were graded. Their column pass rates are the same.
 
 |Part|Passed|Applicable|Rate|
 |---|---|---|---|
@@ -59,7 +59,7 @@ An agent picks a table before it picks a column, so each model's table descripti
 |Table source|It says where the data comes from.|A source phrase: sourced from, loaded from, built from, comes from, derived from, source system.|
 |Table scope|It says what the table leaves out, or when to use a different table.|An exclusion or redirect phrase: excludes, excluding, does not include, only includes, instead, unless, except.|
 
-On the sample, 5 tables get 3 grades each.
+On the sample, in the same report, 5 tables get 3 grades each.
 
 |Part|Passed|Applicable|Rate|
 |---|---|---|---|

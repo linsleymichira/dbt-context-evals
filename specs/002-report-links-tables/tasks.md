@@ -78,7 +78,7 @@ description: "Task list for the scorecard report with links, a data file and tab
 - [X] T021 [P] [US3] Write failing tests in `tests/test_tables.py` from the approved rules: one description that passes and one that fails per part, an undocumented table fails all three and joins the drift section, an unwritten table section stops the run, and every column pass rate is unchanged (FR-010 to FR-014). 11 tests. Three feature 001 and US2 assertions changed with the rubric's section list: `tests/test_rubric.py`, `tests/test_rules.py` and `tests/test_result.py`
 - [X] T022 [US3] Implement `load_tables()`, the three rule functions, the table rows in `build_result()` and the table sections in `render_report()` to pass T021. Built as `grade_table()` with one pattern per part. The table sections appear only when tables are passed in, so every earlier report test stays as it was
 - [X] T023 [US3] Run quickstart.md scenario 10 on the baseline and confirm 5 tables, 15 grades, 3 undocumented tables and unchanged column rates. Confirmed 2026-10-13 on a `-dirty` run, which was not kept: all 15 grades fail, and the column rates are 41%, 53%, 0% and 0%
-- [ ] T024 [US3] Refresh `README.md` to say that table descriptions are graded, with the table pass rates. Drafted 2026-10-13, uncommitted. Left: the user commits, the scorecard runs on the clean tree, and the README links that first report with table grades
+- [X] T024 [US3] Refresh `README.md` to say that table descriptions are graded, with the table pass rates. Done 2026-10-13: the table grades are committed at `94cff0d`, the report pair `results/94cff0d.md` and `.json` is committed after it, and the README cites that pair
 
 ---
 
