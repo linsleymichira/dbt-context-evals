@@ -23,3 +23,6 @@ pythonpath = ["."]
 
 [tool.ruff]
 line-length = 79
+
+[tool.pyright]
+typeCheckingMode = "standard"
