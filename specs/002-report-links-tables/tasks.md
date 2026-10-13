@@ -63,8 +63,8 @@ description: "Task list for the scorecard report with links, a data file and tab
 - [X] T013 [P] Update the scorecard lines in `CLAUDE.md` and the file names in `specs/001-context-scorecard/contracts/cli.md` step 4 to name the `.json` file
 - [X] T014 Run quickstart.md scenarios 1 to 4 and 6 to 9 and report each result
 - [X] T015 **USER GATE**: commit the code, then run the scorecard on the clean tree and commit the first `results/<sha>.md` and `results/<sha>.json` pair
-- [ ] T016 Refresh `README.md` from that report: the report link, the data file, and one sentence on the links. The user edits the wording (FR-018). Drafted 2026-10-13 from `results/1163cc8.md`, uncommitted. The task is ticked when the user has read the wording
-- [ ] T017 **USER GATE**: after the push, run quickstart.md scenario 5 by clicking 3 links on GitHub. The push landed on 2026-10-13 (`origin/master` at `912e284`), so the scenario can run now
+- [X] T016 Refresh `README.md` from that report: the report link, the data file, and one sentence on the links. The user edits the wording (FR-018). Refreshed 2026-10-13, and the user read the wording the same day
+- [X] T017 **USER GATE**: after the push, run quickstart.md scenario 5 by clicking 3 links on GitHub. The user clicked the links on GitHub on 2026-10-13 and the scenario passes
 
 ---
 

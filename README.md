@@ -59,7 +59,7 @@ An agent picks a table before it picks a column, so each model's table descripti
 |Table source|It says where the data comes from.|A source phrase: sourced from, loaded from, built from, comes from, derived from, source system.|
 |Table scope|It says what the table leaves out, or when to use a different table.|An exclusion or redirect phrase: excludes, excluding, does not include, only includes, instead, unless, except.|
 
-On the sample, in the same report, 5 tables get 3 grades each.
+On the sample, the [Markdown report](results/94cff0d.md) and [JSON artifact](results/94cff0d.json) contain the 15 table grades behind these rates.
 
 |Part|Passed|Applicable|Rate|
 |---|---|---|---|

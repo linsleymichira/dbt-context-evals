@@ -1,8 +1,8 @@
 # Context rubric
 
-A column description passes a part when it does what that part asks. The scorecard checks these four parts for every documented column.
+A description passes a part when it does what that part asks. The scorecard checks the four column parts for every documented column and the three table parts for every table.
 
-The standard to aim for is the `account_status` example from LangChain's post "How LangChain Built an Agent-First Data Stack" (July 27, 2026). It names the source system, says what each value means, and gives a default filter.
+The standard to aim for in a column description is the `account_status` example from LangChain's post "How LangChain Built an Agent-First Data Stack" (July 27, 2026). It names the source system, says what each value means, and gives a default filter.
 
 ## 1. Business meaning
 
