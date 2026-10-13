@@ -469,12 +469,23 @@ def load_columns(manifest, catalog, read=None):
 # --- tables ---------------------------------------------------------------
 
 
-def _table_location(node, read):
+def _table_location(node, docs, read):
     """Where a table description is written (spec 002, research R2)."""
     schema_path = (node.get("patch_path") or "").partition("://")[2]
     if not schema_path:
         sql_path = node.get("original_file_path")
         return Location(_repo_path(sql_path)) if sql_path else None
+    blocks = node.get("doc_blocks") or []
+    block = docs.get(blocks[0]) if len(blocks) == 1 else None
+    if block and block.get("original_file_path"):
+        path = block["original_file_path"]
+        line = None
+        if read:
+            try:
+                line = find_block_line(read(path), block["name"])
+            except OSError:
+                pass
+        return Location(_repo_path(path), line)
     line = None
     if read:
         try:
@@ -495,7 +506,7 @@ def load_tables(manifest, read=None):
             model=node["name"],
             status="documented" if description else "undocumented",
             description=description,
-            location=_table_location(node, read),
+            location=_table_location(node, manifest.get("docs", {}), read),
         )
         for node in manifest["nodes"].values()
         if node.get("resource_type") == "model"

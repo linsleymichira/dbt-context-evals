@@ -147,6 +147,24 @@ def test_a_description_from_a_shared_block_points_at_the_block(
     )
 
 
+def test_a_table_description_from_a_shared_block_points_at_the_block(manifest):
+    manifest = _with_paths(manifest)
+    manifest["nodes"][CUSTOMERS]["description"] = "Customers in the model."
+    manifest["nodes"][CUSTOMERS]["doc_blocks"] = [
+        "doc.jaffle_shop.orders_status"
+    ]
+    manifest["docs"] = {
+        "doc.jaffle_shop.orders_status": {
+            "name": "orders_status",
+            "original_file_path": "models/docs.md",
+        }
+    }
+
+    tables = score_context.load_tables(manifest, read=_read)
+
+    assert tables[0].location == Location("jaffle-shop/models/docs.md", 3)
+
+
 def test_an_unreadable_docs_file_keeps_the_block_location_without_a_line(
     manifest, catalog
 ):
