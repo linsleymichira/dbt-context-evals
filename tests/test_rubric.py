@@ -27,6 +27,9 @@ def test_filled_rubric_returns_each_part_sentence_keyed_by_part(
         "not_applicable": (
             "Primary keys skip allowed values and default filter."
         ),
+        "table_grain": "Says what one row is.",
+        "table_source": "Says where the data comes from.",
+        "table_scope": "Says what the table leaves out.",
     }
 
 
@@ -55,7 +58,13 @@ def test_a_missing_section_counts_as_unwritten(tmp_path):
     with pytest.raises(score_context.RubricUnwritten) as err:
         score_context.load_rubric(path)
 
-    assert err.value.sections == ("default_filter", "not_applicable")
+    assert err.value.sections == (
+        "default_filter",
+        "not_applicable",
+        "table_grain",
+        "table_source",
+        "table_scope",
+    )
 
 
 def test_the_real_rubric_has_every_section_written():

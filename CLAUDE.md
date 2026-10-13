@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this repo is
 
-An eval harness for the quality of dbt column descriptions as context for agents. `rubric.md` defines four parts every documented column is scored on (business meaning, allowed values, interpretation guidance, default filter, plus a "not applicable" carve-out). The target standard is the `account_status` example from LangChain's post "How LangChain Built an Agent-First Data Stack" (July 27, 2026): name the source system, define each value, give a default filter.
+An eval harness for the quality of dbt column descriptions as context for agents. `rubric.md` defines four parts every documented column is scored on (business meaning, allowed values, interpretation guidance, default filter, plus a "not applicable" carve-out). It also defines three parts every table description is scored on (grain, source, scope), under constitution v1.3.0. The target standard is the `account_status` example from LangChain's post "How LangChain Built an Agent-First Data Stack" (July 27, 2026): name the source system, define each value, give a default filter.
 
 The scorecard is `score_context.py` at the repo root. It writes one report per scored commit to `results/`. The eval harness (frozen questions, weak docs against strong docs) does not exist yet.
 

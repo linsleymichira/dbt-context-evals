@@ -23,3 +23,15 @@ A description passes when it says which rows to include or exclude by default, a
 ## Not applicable
 
 A key column skips allowed values and default filter, but it must still pass business meaning by saying what one row is and what the key joins to. A free-text column skips allowed values. Every other part applies to every column.
+
+## Table grain
+
+A table description passes when it says what one row is.
+
+## Table source
+
+A table description passes when it says where the data comes from.
+
+## Table scope
+
+A table description passes when it says what the table leaves out, or when to use a different table.

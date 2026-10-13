@@ -213,7 +213,13 @@ def test_every_fail_carries_a_reason_and_only_judgment_parts_are_heuristic():
     assert [g.part for g in grades] == list(score_context.PARTS)
     assert all(g.reason for g in grades if g.outcome == "fail")
     assert score_context.HEURISTIC_PARTS == frozenset(
-        {"business_meaning", "interpretation_guidance"}
+        {
+            "business_meaning",
+            "interpretation_guidance",
+            "table_grain",
+            "table_source",
+            "table_scope",
+        }
     )
     assert set(score_context.RULE_SUMMARIES) == set(
         score_context.RUBRIC_SECTIONS

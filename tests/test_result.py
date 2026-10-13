@@ -81,7 +81,7 @@ def test_each_rubric_part_carries_its_sentence_and_its_rule(inputs):
         "heuristic": True,
     }
     assert [r["part"] for r in result["rubric"]] == list(
-        score_context.RUBRIC_SECTIONS
+        score_context.COLUMN_SECTIONS
     )
 
 

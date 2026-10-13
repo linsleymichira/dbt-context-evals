@@ -8,7 +8,7 @@
 
 The scorecard learns where each description is written, holds one result per run, and writes that result twice: as the Markdown report and as a JSON data file. Every column row and table row links to its location. The scorecard's own sentences are brought to the user's eight writing rules. Table descriptions are graded on three table parts, in their own rows, once the constitution allows it. See [research.md](research.md) for the decisions.
 
-**Build order**: User Stories 1, 2 and 4 are built now. User Story 3 is designed here and gated on a constitution amendment (see Constitution Check).
+**Build order**: User Stories 1, 2 and 4 were built first. User Story 3 was designed here, gated on a constitution amendment (see Constitution Check), and built on 2026-10-13 after it.
 
 ## Technical Context
 
@@ -32,18 +32,18 @@ The scorecard learns where each description is written, holds one result per run
 
 ## Constitution Check
 
-*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.* Checked against constitution v1.2.0 as it stands in the working tree on 2026-10-10 (amended that day, not yet committed).
+*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.* Checked against constitution v1.2.0 on 2026-10-10, and again against v1.3.0 on 2026-10-13, when the user approved the amendment to Principle I.
 
 |Principle|Check|Status|
 |---|---|---|
-|I. The Rubric Is the Standard|User Stories 1, 2 and 4 add no criterion and change no rule. **User Story 3 adds three table parts, and Principle I defines the rubric as the standard for a column description only.** The amendment notes say scoring another kind of context needs its own amendment. The user approved the three table sentences on 2026-10-10, which meets "authored by the user" once the principle covers tables.|Pass for US1, US2, US4. **Blocked for US3 until amended**|
+|I. The Rubric Is the Standard|User Stories 1, 2 and 4 add no criterion and change no rule. **User Story 3 adds three table parts, and Principle I defines the rubric as the standard for a column description only.** The amendment notes say scoring another kind of context needs its own amendment. The user approved the three table sentences on 2026-10-10, which meets "authored by the user" once the principle covers tables.|Pass for US1, US2, US4. US3 was blocked at v1.2.0 and passes at v1.3.0|
 |II. Baseline and Diffable History|Both files carry the commit label. `results/8eabd21.md` is never rewritten (FR-017).|Pass|
 |III. Score What dbt Resolves|Grades still read `manifest.json`. Documentation files are read only to find a line number, and a missing location never changes a grade (FR-004).|Pass|
 |IV. Code Scores, the Model Judges|Locations and the data file are pure code. Table rules are code, with the pattern rules marked heuristic.|Pass|
 |V. Smallest Harness That Works|No service, database or framework is added. PyYAML arrives with dbt (R1).|Pass|
 |VI. Pre-Register the Eval|Applies to the eval harness, which this feature does not touch.|Not applicable|
 
-Post-design re-check: unchanged. US3 stays gated. Tasks for US3 start with a USER GATE for the amendment.
+Post-design re-check: unchanged at v1.2.0. The amendment landed as v1.3.0 on 2026-10-13, and US3 was built after it.
 
 ## Project Structure
 
@@ -66,7 +66,7 @@ specs/002-report-links-tables/
 dbt-context-evals/
 ├── score_context.py     # adds: locations, the result dict, JSON writing, table grades
 ├── tests/
-│   ├── test_locations.py   # new, US1
+│   ├── test_links.py       # new, US1
 │   ├── test_result.py      # new, US2
 │   ├── test_wording.py     # new, US4
 │   └── test_tables.py      # new, US3 (gated)

@@ -1,8 +1,12 @@
 """Score dbt column descriptions against the four-part rubric in rubric.md.
 
+Table descriptions are scored on the rubric's three table parts.
+
 Usage: .venv/bin/python score_context.py [--llm]
 
-See specs/001-context-scorecard/ for the spec, plan, and CLI contract.
+See specs/001-context-scorecard/ for the spec, plan, and CLI contract,
+and specs/002-report-links-tables/ for the links, the data file and the
+table grades.
 """
 
 import json
@@ -29,7 +33,9 @@ PARTS = (
     "interpretation_guidance",
     "default_filter",
 )
-RUBRIC_SECTIONS = PARTS + ("not_applicable",)
+TABLE_PARTS = ("table_grain", "table_source", "table_scope")
+COLUMN_SECTIONS = PARTS + ("not_applicable",)
+RUBRIC_SECTIONS = COLUMN_SECTIONS + TABLE_PARTS
 UNWRITTEN_MARKER = "<!-- YOU WRITE"
 PII_TOKEN = re.compile(r"\s*\bPII\.")
 KEY_TESTS = frozenset(
@@ -64,8 +70,31 @@ RULE_SUMMARIES = {
         "column (varchar with no accepted_values test) skips allowed "
         "values."
     ),
+    # The three table rules the user approved on 2026-10-13 (spec 002,
+    # tasks.md T019).
+    "table_grain": (
+        "The description contains a grain phrase: one row per, one row "
+        "for each, each row, one record per."
+    ),
+    "table_source": (
+        "The description contains a source phrase: sourced from, loaded "
+        "from, built from, comes from, derived from, source system."
+    ),
+    "table_scope": (
+        "The description contains an exclusion or redirect phrase: "
+        "excludes, excluding, does not include, only includes, instead, "
+        "unless, except."
+    ),
 }
-HEURISTIC_PARTS = frozenset({"business_meaning", "interpretation_guidance"})
+HEURISTIC_PARTS = frozenset(
+    {
+        "business_meaning",
+        "interpretation_guidance",
+        "table_grain",
+        "table_source",
+        "table_scope",
+    }
+)
 API_KEY_NAME = "ANTHROPIC_API_KEY"
 MODEL_ENV_NAME = "SCORECARD_MODEL"
 DEFAULT_MODEL = "claude-sonnet-5-5"
@@ -75,6 +104,9 @@ PART_TITLES = {
     "interpretation_guidance": "Interpretation guidance",
     "default_filter": "Default filter",
     "not_applicable": "Not applicable",
+    "table_grain": "Table grain",
+    "table_source": "Table source",
+    "table_scope": "Table scope",
 }
 
 STOPWORDS = frozenset(
@@ -102,6 +134,20 @@ FILTER = re.compile(
     flags=re.I,
 )
 OVERRIDE = re.compile(r"\b(?:unless|except when|only if)\b", flags=re.I)
+TABLE_GRAIN = re.compile(
+    r"\b(?:one row per|one row for each|each row|one record per)\b",
+    flags=re.I,
+)
+TABLE_SOURCE = re.compile(
+    r"\b(?:sourced from|loaded from|built from|comes from|derived from"
+    r"|source system)\b",
+    flags=re.I,
+)
+TABLE_SCOPE = re.compile(
+    r"\b(?:excludes|excluding|does not include|only includes|instead"
+    r"|unless|except)\b",
+    flags=re.I,
+)
 
 
 class RubricUnwritten(Exception):
@@ -144,9 +190,17 @@ class Column:
 
 
 @dataclass(frozen=True)
+class Table:
+    model: str
+    status: str  # documented or undocumented
+    description: str
+    location: Location | None = None
+
+
+@dataclass(frozen=True)
 class Grade:
     model: str
-    name: str
+    name: str  # the column, or "" for a table grade
     part: str
     outcome: str  # pass, fail, or n/a (a model grade can be unreadable)
     reason: str
@@ -296,6 +350,15 @@ def find_column_line(text, model, column):
     return None
 
 
+def find_model_line(text, model):
+    """The 1-based line of a model's name in a schema file, or None."""
+    models = _mapping_value(yaml.compose(text), "models")
+    for model_name, line, _ in _named_entries(models):
+        if model_name == model:
+            return line
+    return None
+
+
 def find_block_line(text, name):
     """The 1-based line that opens the docs block called name, or None."""
     opener = re.compile(rf"\{{%-?\s*docs\s+{re.escape(name)}\s*-?%\}}")
@@ -401,6 +464,45 @@ def load_columns(manifest, catalog, read=None):
         )
     )
     return tuple(sorted(columns, key=lambda c: (c.model, c.name)))
+
+
+# --- tables ---------------------------------------------------------------
+
+
+def _table_location(node, read):
+    """Where a table description is written (spec 002, research R2)."""
+    schema_path = (node.get("patch_path") or "").partition("://")[2]
+    if not schema_path:
+        sql_path = node.get("original_file_path")
+        return Location(_repo_path(sql_path)) if sql_path else None
+    line = None
+    if read:
+        try:
+            line = find_model_line(read(schema_path), node["name"])
+        except OSError:
+            # Same rule as a column: keep the file, lose the line.
+            pass
+    return Location(_repo_path(schema_path), line)
+
+
+def load_tables(manifest, read=None):
+    """One Table per model of the project, sorted by model.
+
+    read is the same reader load_columns takes.
+    """
+    tables = (
+        Table(
+            model=node["name"],
+            status="documented" if description else "undocumented",
+            description=description,
+            location=_table_location(node, read),
+        )
+        for node in manifest["nodes"].values()
+        if node.get("resource_type") == "model"
+        and node.get("package_name") == PACKAGE
+        for description in [(node.get("description") or "").strip()]
+    )
+    return tuple(sorted(tables, key=lambda t: t.model))
 
 
 # --- commit label ---------------------------------------------------------
@@ -550,6 +652,41 @@ def grade_all(columns):
         for column in sorted(columns, key=lambda c: (c.model, c.name))
         if column.status != "stale"
         for grade in grade_column(column, models)
+    )
+
+
+TABLE_RULES = {
+    "table_grain": (TABLE_GRAIN, "does not say what one row is"),
+    "table_source": (TABLE_SOURCE, "does not say where the data comes from"),
+    "table_scope": (
+        TABLE_SCOPE,
+        "does not say what the table leaves out or which table to use",
+    ),
+}
+
+
+def grade_table(table):
+    """One rule Grade per table part, in TABLE_PARTS order."""
+
+    def outcome(part):
+        if table.status == "undocumented":
+            return "fail", "no description"
+        pattern, reason = TABLE_RULES[part]
+        if pattern.search(table.description):
+            return "pass", ""
+        return "fail", reason
+
+    return tuple(
+        Grade(table.model, "", part, *outcome(part)) for part in TABLE_PARTS
+    )
+
+
+def grade_tables(tables):
+    """Table grades for every model. No table part is ever skipped."""
+    return tuple(
+        grade
+        for table in sorted(tables, key=lambda t: t.model)
+        for grade in grade_table(table)
     )
 
 
@@ -721,24 +858,35 @@ def _link(text, column):
     return f"[{text}](../{where.path}{anchor})"
 
 
-def _column_row(column, parts):
+def _reasons(parts, keys):
     # A reason shared by several parts is written once (spec 002, FR-016).
     failed_parts = {}
-    for part in PARTS:
+    for part in keys:
         if parts[part].outcome == "fail":
             failed_parts.setdefault(parts[part].reason, []).append(
                 PART_TITLES[part]
             )
-    reasons = ". ".join(
+    return ". ".join(
         f"{', '.join(titles)}: {reason}"
         for reason, titles in failed_parts.items()
     )
+
+
+def _column_row(column, parts):
     return [
         column.model,
         _link(column.name, column),
         "PII" if column.pii else "",
         *(parts[part].outcome for part in PARTS),
-        reasons,
+        _reasons(parts, PARTS),
+    ]
+
+
+def _table_row(table, parts):
+    return [
+        _link(table.model, table),
+        *(parts[part].outcome for part in TABLE_PARTS),
+        _reasons(parts, TABLE_PARTS),
     ]
 
 
@@ -761,13 +909,62 @@ def _name_list(label, columns):
     return f"{label} ({len(columns)}): {names}"
 
 
-def render_report(label, rubric, columns, grades, model_grades=None):
+def _table_sections(tables, table_grades):
+    """The report sections table grades add, keyed by where they go."""
+    if tables is None:
+        return {"rates": [], "drift": [], "tables": []}
+    tables = sorted(tables, key=lambda t: t.model)
+    by_table = _by_column(table_grades)
+    undocumented = [t for t in tables if t.status == "undocumented"]
+    names = ", ".join(_link(f"`{t.model}`", t) for t in undocumented) or "none"
+    return {
+        "rates": [
+            "## Pass rate by table part",
+            _table(
+                ["Part", "Passed", "Applicable", "Rate"],
+                [
+                    [
+                        PART_TITLES[part],
+                        *_rate(g for g in table_grades if g.part == part),
+                    ]
+                    for part in TABLE_PARTS
+                ],
+            ),
+        ],
+        "drift": [f"Undocumented tables ({len(undocumented)}): {names}"],
+        "tables": [
+            "## Tables",
+            _table(
+                [
+                    "Model",
+                    *(PART_TITLES[part] for part in TABLE_PARTS),
+                    "Why it failed",
+                ],
+                [_table_row(t, by_table[(t.model, "")]) for t in tables],
+            ),
+        ],
+    }
+
+
+def render_report(
+    label,
+    rubric,
+    columns,
+    grades,
+    model_grades=None,
+    tables=None,
+    table_grades=(),
+):
     """The Markdown report, in the section order of contracts/cli.md.
 
     model_grades is None on a default run. With --llm it adds two cells
-    to each row of the per-column table and changes nothing else.
+    to each row of the per-column table and changes nothing else. With
+    tables, the report gains the table sections of spec 002's contract,
+    and no column section changes.
     """
     columns = sorted(columns, key=lambda c: (c.model, c.name))
+    rubric_keys = COLUMN_SECTIONS + (() if tables is None else TABLE_PARTS)
+    table_sections = _table_sections(tables, table_grades)
     by_column = _by_column(grades)
     by_model_grade = _by_column(model_grades or ())
     graded = [c for c in columns if (c.model, c.name) in by_column]
@@ -802,7 +999,7 @@ def render_report(label, rubric, columns, grades, model_grades=None):
                     RULE_SUMMARIES[key],
                     "yes" if key in HEURISTIC_PARTS else "no",
                 ]
-                for key in RUBRIC_SECTIONS
+                for key in rubric_keys
             ],
         ),
         "## Pass rate by part",
@@ -816,6 +1013,7 @@ def render_report(label, rubric, columns, grades, model_grades=None):
                 for part in PARTS
             ],
         ),
+        *table_sections["rates"],
         "## Pass rate by model",
         _table(
             ["Model", "Passed", "Applicable", "Rate"],
@@ -829,6 +1027,8 @@ def render_report(label, rubric, columns, grades, model_grades=None):
             "Undocumented", [c for c in columns if c.status == "undocumented"]
         ),
         _name_list("Stale", [c for c in columns if c.status == "stale"]),
+        *table_sections["drift"],
+        *table_sections["tables"],
         "## Columns",
         _table(
             column_header
@@ -892,7 +1092,70 @@ def _qualified(columns, status):
     return [f"{c.model}.{c.name}" for c in columns if c.status == status]
 
 
-def build_result(label, rubric, columns, grades, model_grades=None):
+def _location_entry(location):
+    if location is None:
+        return None
+    return {"path": location.path, "line": location.line}
+
+
+def _with_tables(result, rubric, tables, table_grades):
+    """result plus the table fields, in the key order of data-model.md."""
+    tables = sorted(tables, key=lambda t: t.model)
+    by_table = _by_column(table_grades)
+    return {
+        **{key: result[key] for key in ("schema_version", "commit", "dirty")},
+        "rubric": result["rubric"]
+        + [
+            {
+                "part": key,
+                "applies_to": "table",
+                "sentence": " ".join(rubric[key].split()),
+                "rule": RULE_SUMMARIES[key],
+                "heuristic": key in HEURISTIC_PARTS,
+            }
+            for key in TABLE_PARTS
+        ],
+        "pass_rates": {
+            **result["pass_rates"],
+            "table_parts": [
+                _rate_entry(
+                    "part", part, (g for g in table_grades if g.part == part)
+                )
+                for part in TABLE_PARTS
+            ],
+        },
+        "drift": {
+            **result["drift"],
+            "undocumented_tables": [
+                t.model for t in tables if t.status == "undocumented"
+            ],
+        },
+        "tables": [
+            {
+                "model": t.model,
+                "status": t.status,
+                "description": t.description,
+                "location": _location_entry(t.location),
+                "grades": {
+                    part: _grade_entry(by_table[(t.model, "")][part], None)
+                    for part in TABLE_PARTS
+                },
+            }
+            for t in tables
+        ],
+        "columns": result["columns"],
+    }
+
+
+def build_result(
+    label,
+    rubric,
+    columns,
+    grades,
+    model_grades=None,
+    tables=None,
+    table_grades=(),
+):
     """Everything one run found, as plain data (spec 002, contracts).
 
     It takes the same inputs as render_report, so the data file and the
@@ -901,7 +1164,7 @@ def build_result(label, rubric, columns, grades, model_grades=None):
     columns = sorted(columns, key=lambda c: (c.model, c.name))
     by_column = _by_column(grades)
     by_model_grade = _by_column(model_grades or ())
-    return {
+    result = {
         "schema_version": 1,
         "commit": label,
         "dirty": label.endswith("-dirty"),
@@ -913,7 +1176,7 @@ def build_result(label, rubric, columns, grades, model_grades=None):
                 "rule": RULE_SUMMARIES[key],
                 "heuristic": key in HEURISTIC_PARTS,
             }
-            for key in RUBRIC_SECTIONS
+            for key in COLUMN_SECTIONS
         ],
         "pass_rates": {
             "by_part": [
@@ -940,11 +1203,7 @@ def build_result(label, rubric, columns, grades, model_grades=None):
                 "status": c.status,
                 "pii": c.pii,
                 "description": c.description,
-                "location": (
-                    None
-                    if c.location is None
-                    else {"path": c.location.path, "line": c.location.line}
-                ),
+                "location": _location_entry(c.location),
                 "grades": {
                     part: _grade_entry(
                         parts[part],
@@ -958,6 +1217,9 @@ def build_result(label, rubric, columns, grades, model_grades=None):
             for c in columns
         ],
     }
+    if tables is None:
+        return result
+    return _with_tables(result, rubric, tables, table_grades)
 
 
 def render_json(result):
@@ -987,23 +1249,34 @@ def main(argv=None):
         print(error, file=sys.stderr)
         return 4
     target = PROJECT_DIR / "target"
+    manifest = json.loads((target / "manifest.json").read_text())
+
+    def read(path):
+        return (PROJECT_DIR / path).read_text()
+
     columns = load_columns(
-        json.loads((target / "manifest.json").read_text()),
+        manifest,
         json.loads((target / "catalog.json").read_text()),
-        read=lambda path: (PROJECT_DIR / path).read_text(),
+        read=read,
     )
+    tables = load_tables(manifest, read)
     label = commit_label()
     grades = grade_all(columns)
+    table_grades = grade_tables(tables)
     model_grades = (
         grade_with_model(client, rubric, columns, grades) if use_llm else None
     )
-    report = render_report(label, rubric, columns, grades, model_grades)
+    report = render_report(
+        label, rubric, columns, grades, model_grades, tables, table_grades
+    )
     print(report, end="")
     RESULTS_DIR.mkdir(exist_ok=True)
     # Model wording varies between runs, so it never lands in the
     # deterministic pair of files for the commit.
     stem = f"{label}-llm" if use_llm else label
-    result = build_result(label, rubric, columns, grades, model_grades)
+    result = build_result(
+        label, rubric, columns, grades, model_grades, tables, table_grades
+    )
     (RESULTS_DIR / f"{stem}.json").write_text(render_json(result))
     (RESULTS_DIR / f"{stem}.md").write_text(report)
     return 0

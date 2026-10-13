@@ -59,11 +59,11 @@
 
 |Part|Candidate rule|Heuristic|
 |---|---|---|
-|Grain|A grain phrase: one row per, one row for each, each row, one record per|no|
+|Grain|A grain phrase: one row per, one row for each, each row, one record per|yes|
 |Source|A source phrase: sourced from, loaded from, built from, comes from, derived from, source system|yes|
 |Scope|An exclusion or redirect phrase: excludes, excluding, does not include, only includes, instead, unless, except|yes|
 
 - Table grades get their own rubric rows, their own pass-rate rows and their own table. The column pass rates and the per-model column rate are computed from column grades only (FR-013).
 - A model with no table description fails all three with "no description" and joins the drift section as an undocumented table.
 - **Rationale**: the candidates follow the shape of the approved column rules, a named list of phrases, so the user can check each against their sentence.
-- **Open until the gate**: the candidates are a starting point and not a default. Expected baseline result under them: `customers` and `orders` fail all three, and the three staging models fail as undocumented. `[Assumption]` until run.
+- **Settled at the gate**: the user approved the three candidates as written on 2026-10-13. The same day the user marked the grain rule as heuristic, where the candidate said it was not: it matches a phrase, and "each row is checked nightly" would pass it. Baseline result under them, run the same day: `customers` and `orders` fail all three, and the three staging models fail as undocumented.

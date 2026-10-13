@@ -1,16 +1,16 @@
 <!--
 Sync Impact Report
-- Version change: 1.1.0 → 1.2.0 (MINOR: one principle added, two materially expanded)
-- Modified principles: II. Baseline and Diffable History (adds the committed doc sets the eval harness compares), V. Smallest Harness That Works (names the three parts of the project and the one approved external service)
-- Added principles: VI. Pre-Register the Eval
-- Added sections: none. Evaluation Workflow is split into a scorecard workflow and a harness workflow
+- Version change: 1.2.0 → 1.3.0 (MINOR: one principle materially expanded)
+- Modified principles: I. The Rubric Is the Standard (the rubric now also defines a passing table description, on three table parts: grain, source, scope)
+- Added principles: none
+- Added sections: none
 - Removed sections: none
-- Unchanged: I, III, IV. Principle I still limits the rubric to column descriptions. Scoring other kinds of context (semantic models, workspace guides, endorsements) needs its own amendment
+- Unchanged: II, III, IV, V, VI. The four column parts and the "not applicable" carve-out are unchanged. Scoring other kinds of context (semantic models, workspace guides, endorsements) still needs its own amendment
 - Templates: plan-template.md, spec-template.md and tasks-template.md were not modified (they read this file at runtime)
-- Dependent artifacts: specs/001-context-scorecard/plan.md was checked against v1.1.0 and still passes, because Principle VI applies to the harness and not to the scorecard. No edit needed
-- Deferred TODOs: the user reviews the wording of II, V and VI before the first harness spec. The suggestion source for the loop is not chosen, so V leaves it to that feature's spec
-- Why: the user moved the eval harness onto LangSmith and took the suggestion-to-PR loop into scope on 2026-10-10. Principle V as written at v1.1.0 forbade both, and pre-registration was a plan principle the constitution never stated
-- History: v1.0.0 ratified 2026-10-06 with five principles inferred from rubric.md, CLAUDE.md and the baseline commit e68d4c3. v1.0.1 and v1.1.0 set bounded workflow rounds to exactly one description
+- Dependent artifacts: specs/002-report-links-tables/plan.md marked User Story 3 "Blocked until amended" against v1.2.0. This amendment lifts that block once the user approves it. specs/001-context-scorecard is not affected, because it grades columns only
+- Deferred TODOs: none for Principle I, which the user approved on 2026-10-13. The user's review of the wording of II, V and VI, deferred at v1.2.0, is still open
+- Why: the user asked on 2026-10-10 for the scorecard to grade table descriptions as well as column descriptions, and approved three table pass sentences that day. Principle I at v1.2.0 limited the rubric to column descriptions
+- History: v1.0.0 ratified 2026-10-06 with five principles inferred from rubric.md, CLAUDE.md and the baseline commit e68d4c3. v1.0.1 and v1.1.0 set bounded workflow rounds to exactly one description. v1.2.0 (2026-10-10) added Principle VI and expanded II and V for the eval harness on LangSmith and the suggestion-to-PR loop
 -->
 
 # dbt-context-evals Constitution
@@ -19,7 +19,7 @@ Sync Impact Report
 
 ### I. The Rubric Is the Standard
 
-`rubric.md` is the only definition of a passing column description. Every documented column is scored on the four parts it defines (business meaning, allowed values, interpretation guidance, default filter), subject to its "not applicable" carve-out. The pass criteria under each part MUST be authored by the user. Tooling and agents MUST NOT fill a `YOU WRITE` placeholder or invent a criterion the rubric does not state. The reference standard is the `account_status` example from LangChain's post "How LangChain Built an Agent-First Data Stack" (July 27, 2026).
+`rubric.md` is the only definition of a passing column description and of a passing table description. Every documented column is scored on the four column parts it defines (business meaning, allowed values, interpretation guidance, default filter), subject to its "not applicable" carve-out. Every model's table description is scored on the three table parts it defines (grain, source, scope). Table grades MUST be reported apart from column grades and MUST NOT change a column pass rate. The pass criteria under each part MUST be authored by the user. Tooling and agents MUST NOT fill a `YOU WRITE` placeholder or invent a criterion the rubric does not state. The reference standard for a column is the `account_status` example from LangChain's post "How LangChain Built an Agent-First Data Stack" (July 27, 2026). No other kind of context is scored until an amendment names it.
 
 Rationale: an eval whose criteria are written by the thing being evaluated measures nothing.
 
@@ -89,4 +89,4 @@ Rationale: questions written after the strong docs can be fitted to them. A read
 
 This constitution takes precedence over other workflow guidance in this repo. `CLAUDE.md` holds runtime development guidance and MUST NOT contradict it. Amendments are made through `/speckit-constitution`, recorded in the Sync Impact Report at the top of this file, and versioned by semantic versioning: MAJOR for removing or redefining a principle, MINOR for adding a principle or materially expanding one, PATCH for wording. Every spec and plan MUST be checked against Principles I through VI before implementation starts.
 
-**Version**: 1.2.0 | **Ratified**: 2026-10-06 | **Last Amended**: 2026-10-10
+**Version**: 1.3.0 | **Ratified**: 2026-10-06 | **Last Amended**: 2026-10-13

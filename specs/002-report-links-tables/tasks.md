@@ -63,8 +63,8 @@ description: "Task list for the scorecard report with links, a data file and tab
 - [X] T013 [P] Update the scorecard lines in `CLAUDE.md` and the file names in `specs/001-context-scorecard/contracts/cli.md` step 4 to name the `.json` file
 - [X] T014 Run quickstart.md scenarios 1 to 4 and 6 to 9 and report each result
 - [X] T015 **USER GATE**: commit the code, then run the scorecard on the clean tree and commit the first `results/<sha>.md` and `results/<sha>.json` pair
-- [ ] T016 Refresh `README.md` from that report: the report link, the data file, and one sentence on the links. The user edits the wording (FR-018)
-- [ ] T017 **USER GATE**: after the push, run quickstart.md scenario 5 by clicking 3 links on GitHub
+- [ ] T016 Refresh `README.md` from that report: the report link, the data file, and one sentence on the links. The user edits the wording (FR-018). Drafted 2026-10-13 from `results/1163cc8.md`, uncommitted. The task is ticked when the user has read the wording
+- [ ] T017 **USER GATE**: after the push, run quickstart.md scenario 5 by clicking 3 links on GitHub. The push landed on 2026-10-13 (`origin/master` at `912e284`), so the scenario can run now
 
 ---
 
@@ -72,13 +72,13 @@ description: "Task list for the scorecard report with links, a data file and tab
 
 **Independent Test**: quickstart.md scenario 10.
 
-- [ ] T018 [US3] **USER GATE**: amend constitution Principle I through `/speckit-constitution` so the rubric also defines a passing table description. Nothing below starts before this
-- [ ] T019 [US3] **USER GATE**: approve or edit the three candidate table rules in research R8. Record the approved summaries as constants in `score_context.py`
-- [ ] T020 [US3] Add the three approved sentences to `rubric.md` as sections `Table grain`, `Table source` and `Table scope`, exactly as approved on 2026-10-10
-- [ ] T021 [P] [US3] Write failing tests in `tests/test_tables.py` from the approved rules: one description that passes and one that fails per part, an undocumented table fails all three and joins the drift section, an unwritten table section stops the run, and every column pass rate is unchanged (FR-010 to FR-014)
-- [ ] T022 [US3] Implement `load_tables()`, the three rule functions, the table rows in `build_result()` and the table sections in `render_report()` to pass T021
-- [ ] T023 [US3] Run quickstart.md scenario 10 on the baseline and confirm 5 tables, 15 grades, 3 undocumented tables and unchanged column rates
-- [ ] T024 [US3] Refresh `README.md` to say that table descriptions are graded, with the table pass rates
+- [X] T018 [US3] **USER GATE**: amend constitution Principle I through `/speckit-constitution` so the rubric also defines a passing table description. Nothing below starts before this. Amended to v1.3.0 and approved by the user on 2026-10-13
+- [X] T019 [US3] **USER GATE**: approve or edit the three candidate table rules in research R8. Record the approved summaries as constants in `score_context.py`. The three rubric sentences were approved on 2026-10-10. The user approved the three rules as written on 2026-10-13, then marked the grain rule as heuristic the same day
+- [X] T020 [US3] Add the three approved sentences to `rubric.md` as sections `Table grain`, `Table source` and `Table scope`, exactly as approved on 2026-10-10
+- [X] T021 [P] [US3] Write failing tests in `tests/test_tables.py` from the approved rules: one description that passes and one that fails per part, an undocumented table fails all three and joins the drift section, an unwritten table section stops the run, and every column pass rate is unchanged (FR-010 to FR-014). 11 tests. Three feature 001 and US2 assertions changed with the rubric's section list: `tests/test_rubric.py`, `tests/test_rules.py` and `tests/test_result.py`
+- [X] T022 [US3] Implement `load_tables()`, the three rule functions, the table rows in `build_result()` and the table sections in `render_report()` to pass T021. Built as `grade_table()` with one pattern per part. The table sections appear only when tables are passed in, so every earlier report test stays as it was
+- [X] T023 [US3] Run quickstart.md scenario 10 on the baseline and confirm 5 tables, 15 grades, 3 undocumented tables and unchanged column rates. Confirmed 2026-10-13 on a `-dirty` run, which was not kept: all 15 grades fail, and the column rates are 41%, 53%, 0% and 0%
+- [ ] T024 [US3] Refresh `README.md` to say that table descriptions are graded, with the table pass rates. Drafted 2026-10-13, uncommitted. Left: the user commits, the scorecard runs on the clean tree, and the README links that first report with table grades
 
 ---
 

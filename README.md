@@ -1,6 +1,6 @@
 # dbt-context-evals
 
-A scorecard for dbt column descriptions, read as context for an agent that writes SQL. One command grades every built column on four parts and prints the coverage.
+A scorecard for dbt column and table descriptions, read as context for an agent that writes SQL. One command grades every built column on four parts and every table on three parts, and prints the coverage.
 
 The four parts come from LangChain's post "How LangChain Built an Agent-First Data Stack" (July 27, 2026). The post holds up one `account_status` description as a stronger example. That description names the source system, defines each value and gives a default filter. The sample is dbt Labs' public `jaffle_shop_duckdb` project, vendored under `jaffle-shop/` with its descriptions untouched.
 
@@ -11,7 +11,7 @@ uv sync --all-extras
 .venv/bin/python score_context.py
 ```
 
-The command runs `dbt build` and `dbt docs generate`, grades every column, prints the report and writes it to `results/<commit>.md`. It takes about 7 seconds. Two runs on the same commit produce the same file, byte for byte.
+The command runs `dbt build` and `dbt docs generate`, grades every column and prints the report. It writes the report to `results/<commit>.md` and the same grades as data to `results/<commit>.json`. It takes about 7 seconds. Two runs on the same commit produce the same two files, byte for byte.
 
 ## The rubric
 
@@ -28,7 +28,9 @@ A key column skips allowed values and default filter. A free-text column skips a
 
 ## What the sample scores
 
-From [`results/8eabd21.md`](results/8eabd21.md), on the sample exactly as dbt Labs ships it: 27 built columns across 5 models.
+From [`results/1163cc8.md`](results/1163cc8.md), on the sample exactly as dbt Labs ships it: 27 built columns across 5 models. The data file is [`results/1163cc8.json`](results/1163cc8.json). Each column in the report links to the file and line where its description is written. A column with no description links to the place it is defined.
+
+The first report, [`results/8eabd21.md`](results/8eabd21.md), is kept as the record of the first format. Its pass rates are the same.
 
 |Part|Passed|Applicable|Rate|
 |---|---|---|---|
@@ -47,10 +49,31 @@ From [`results/8eabd21.md`](results/8eabd21.md), on the sample exactly as dbt La
 
 No column in the sample says when its obvious reading is wrong, and none says which rows to leave out by default. Those are the two parts the `account_status` example is built around.
 
+## Table descriptions
+
+An agent picks a table before it picks a column, so each model's table description is graded too. The three table parts are in [`rubric.md`](rubric.md). Table grades have their own rows in the report and never change a column pass rate.
+
+|Part|A table description passes when|The rule|
+|---|---|---|
+|Table grain|It says what one row is.|A grain phrase: one row per, one row for each, each row, one record per.|
+|Table source|It says where the data comes from.|A source phrase: sourced from, loaded from, built from, comes from, derived from, source system.|
+|Table scope|It says what the table leaves out, or when to use a different table.|An exclusion or redirect phrase: excludes, excluding, does not include, only includes, instead, unless, except.|
+
+On the sample, 5 tables get 3 grades each.
+
+|Part|Passed|Applicable|Rate|
+|---|---|---|---|
+|Table grain|0|5|0%|
+|Table source|0|5|0%|
+|Table scope|0|5|0%|
+
+`customers` and `orders` have a table description, and neither says what one row is. The three staging models have no table description.
+
 ## Drift it found
 
-The scorecard compares the documented columns with the columns dbt actually built.
+The scorecard compares the documented columns with the columns dbt actually built, and lists each table with no description.
 
+- **3 undocumented tables.** `stg_customers`, `stg_orders` and `stg_payments`.
 - **12 undocumented columns.** All 11 staging columns, plus `customers.customer_lifetime_value`.
 - **1 stale column.** `customers.total_order_amount` is documented and no longer exists.
 
@@ -78,17 +101,18 @@ Why each one lands where it does:
 
 ## Read the numbers as a heuristic
 
-These grades come from pattern rules, not from a judgment of quality. Allowed values and default filter are close to mechanical. Business meaning and interpretation guidance need judgment, and the code can only look for signs of it, so the report marks both as heuristic. A description could pass interpretation guidance with the word "unless" and still say nothing useful, and a good caveat phrased another way would fail.
+These grades come from pattern rules, not from a judgment of quality. Allowed values and default filter are close to mechanical. Business meaning and interpretation guidance need judgment, and the code can only look for signs of it, so the report marks both as heuristic. The report marks all three table rules as heuristic for the same reason. "Each row is checked nightly" would pass table grain and say nothing about what one row is. A description could pass interpretation guidance with the word "unless" and still say nothing useful, and a good caveat phrased another way would fail.
 
-`--llm` adds a model's grade and one-sentence reason beside the rule grade for those two parts. It needs `ANTHROPIC_API_KEY` in the environment or in a gitignored `.env`. The model is a second opinion. It never changes a rule grade or a pass rate. Its report goes to `results/<commit>-llm.md`, so the repeatable report for the commit is never overwritten.
+`--llm` adds a model's grade and one-sentence reason beside the rule grade for business meaning and interpretation guidance. It does not grade tables. It needs `ANTHROPIC_API_KEY` in the environment or in a gitignored `.env`. The model is a second opinion. It never changes a rule grade or a pass rate. Its report and data file go to `results/<commit>-llm.md` and `results/<commit>-llm.json`, so the repeatable pair for the commit is never overwritten.
 
 ## Layout
 
 |Path|What it is|
 |---|---|
-|`rubric.md`|The four parts and when a column skips one, one sentence each|
+|`rubric.md`|The four column parts, when a column skips one, and the three table parts, one sentence each|
 |`score_context.py`|The scorecard|
-|`results/`|One committed report per scored commit|
+|`results/`|One committed report and data file per scored commit|
 |`jaffle-shop/`|The sample, vendored|
 |`tests/`|`.venv/bin/python -m pytest`|
 |`specs/001-context-scorecard/`|Spec, plan, CLI contract and tasks|
+|`specs/002-report-links-tables/`|Spec, plan, report contract and tasks for the links, the data file and table grades|

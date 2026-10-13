@@ -30,6 +30,18 @@ Says which rows to exclude by default.
 ## Not applicable
 
 Primary keys skip allowed values and default filter.
+
+## Table grain
+
+Says what one row is.
+
+## Table source
+
+Says where the data comes from.
+
+## Table scope
+
+Says what the table leaves out.
 """
 
 
