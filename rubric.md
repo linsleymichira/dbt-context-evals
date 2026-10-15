@@ -6,11 +6,11 @@ The standard to aim for in a column description is the `account_status` example 
 
 ## 1. Business meaning
 
-A description passes when it gives the definition this business has agreed on for the column, which another company might define differently, and does more than restate the column name.
+A description passes when it gives the definition this business has agreed on for the column, one another company might define differently. It must also do more than restate the column name.
 
 ## 2. Allowed values
 
-A description passes when a categorical column lists every expected value and what each one means, and a numeric or date column states the range or kind of values to expect. A data type alone never passes.
+A description passes when a categorical column lists every expected value and what each one means. A numeric or date column passes when it states the range or kind of values to expect. A data type alone never passes.
 
 ## 3. Interpretation guidance
 
@@ -22,7 +22,7 @@ A description passes when it says which rows to include or exclude by default, a
 
 ## Not applicable
 
-A key column skips allowed values and default filter, but it must still pass business meaning by saying what one row is and what the key joins to. A free-text column skips allowed values. Every other part applies to every column.
+A key column skips allowed values and default filter. It must still pass business meaning by saying what one row is and what the key joins to. A free-text column skips allowed values. Every other part applies to every column.
 
 ## Table grain
 
