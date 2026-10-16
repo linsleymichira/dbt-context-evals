@@ -14,7 +14,15 @@ renamed as (
         id as order_id,
         user_id as customer_id,
         order_date,
-        status
+        -- Seeded for the eval: company-style status codes, so a model
+        -- cannot answer status questions from memory of jaffle_shop.
+        case status
+            when 'placed' then '10'
+            when 'shipped' then '20'
+            when 'completed' then '30'
+            when 'return_pending' then '40'
+            when 'returned' then '50'
+        end as status
 
     from source
 

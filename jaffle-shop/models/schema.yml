@@ -56,7 +56,7 @@ models:
         tests:
           - accepted_values:
               arguments:
-                values: ['placed', 'shipped', 'completed', 'return_pending', 'returned']
+                values: ['10', '20', '30', '40', '50']
 
       - name: amount
         description: Total amount (AUD) of the order

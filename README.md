@@ -105,6 +105,12 @@ These grades come from pattern rules, not from a judgment of quality. Allowed va
 
 `--llm` adds a model's grade and one-sentence reason beside the rule grade for business meaning and interpretation guidance. It does not grade tables. It needs `ANTHROPIC_API_KEY` in the environment or in a gitignored `.env`. The model is a second opinion. It never changes a rule grade or a pass rate. Its report and data file go to `results/<commit>-llm.md` and `results/<commit>-llm.json`, so the repeatable pair for the commit is never overwritten.
 
+## Seeded
+
+One fact in the sample was changed on purpose. `jaffle_shop` is dbt's public demo project, so a model has likely seen it in training. In a pilot on October 15, a model saw column names only, with no descriptions. It still wrote the exact status values (`'shipped'`, `'returned'`, `'return_pending'`) and passed 5 of 5 questions. A test like that measures memory, not context.
+
+So `stg_orders.sql` recodes the order status to company-style codes: `10` placed, `20` shipped, `30` completed, `40` return pending, `50` returned. The `orders_status` doc and the `accepted_values` tests carry the codes. Nothing else in the data changed.
+
 ## Layout
 
 |Path|What it is|
@@ -113,6 +119,8 @@ These grades come from pattern rules, not from a judgment of quality. Allowed va
 |`score_context.py`|The scorecard|
 |`results/`|One committed report and data file per scored commit|
 |`jaffle-shop/`|The sample, vendored|
+|`docs_weak/`|The names-only doc set: `schema.yml` with every description removed|
+|`pilot/`|The step 6 pilot: 5 questions with golden SQL and a local runner. Not the frozen question set|
 |`tests/`|`.venv/bin/python -m pytest`|
 |`specs/001-context-scorecard/`|Spec, plan, CLI contract and tasks|
 |`specs/002-report-links-tables/`|Spec, plan, report contract and tasks for the links, the data file and table grades|
