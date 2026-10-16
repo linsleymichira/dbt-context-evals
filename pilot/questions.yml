@@ -1,25 +1,30 @@
 # Pilot only, step 6 of the build plan. NOT the frozen question set.
 # The frozen set is questions.yml at the repo root, written by the user in step 7.
+# v2, October 15: v1 (81224e1) scored 5 of 5 on names only, because the
+# model knew jaffle_shop's status values. v2 asks about seeded status codes
+# and company definitions a model cannot know.
 # context: the answer depends on a fact names alone do not give.
 # control: the column names alone should be enough.
 questions:
   - id: p1
     group: context
     question: How many orders are currently in transit to the customer?
-    hidden_fact: "'In transit' is status 'shipped' (orders_status doc)."
-    golden_sql: select count(*) from orders where status = 'shipped'
+    hidden_fact: "In transit is status code '20' (orders_status doc, seeded)."
+    golden_sql: select count(*) from orders where status = '20'
 
   - id: p2
     group: context
-    question: How many orders has the warehouse received back from customers?
-    hidden_fact: Received back at the warehouse is status 'returned', not 'return_pending'.
-    golden_sql: select count(*) from orders where status = 'returned'
+    question: What is our net revenue?
+    hidden_fact: "Company definition: net revenue is order amount excluding orders with a return pending ('40') or returned ('50')."
+    golden_sql: select sum(amount) from orders where status not in ('40', '50')
 
   - id: p3
     group: context
-    question: How many orders is the warehouse still waiting to receive back after the customer asked to return them?
-    hidden_fact: Asked to return but not yet received is status 'return_pending'.
-    golden_sql: select count(*) from orders where status = 'return_pending'
+    question: How many active customers do we have?
+    hidden_fact: "Company definition: a customer is active when their most recent order falls within 30 days of the latest order date in the data."
+    golden_sql: >-
+      select count(*) from customers
+      where most_recent_order >= (select max(order_date) from orders) - interval 30 day
 
   - id: c1
     group: control

@@ -1,0 +1,1081 @@
+{
+  "schema_version": 1,
+  "commit": "b5b821d",
+  "dirty": false,
+  "rubric": [
+    {
+      "part": "business_meaning",
+      "applies_to": "column",
+      "sentence": "A description passes when it gives the definition this business has agreed on for the column, one another company might define differently. It must also do more than restate the column name.",
+      "rule": "The description has at least 2 content words that are not in the column name and are not filler. A key column must name the table it joins to.",
+      "heuristic": true
+    },
+    {
+      "part": "allowed_values",
+      "applies_to": "column",
+      "sentence": "A description passes when a categorical column lists every expected value and what each one means. A numeric or date column passes when it states the range or kind of values to expect. A data type alone never passes.",
+      "rule": "A column with an accepted_values test names every tested value in its description. A numeric or date column has a unit code in parentheses, a unit word, or an explicit range.",
+      "heuristic": false
+    },
+    {
+      "part": "interpretation_guidance",
+      "applies_to": "column",
+      "sentence": "A description passes when it says how to read the column correctly and names at least one case where the obvious reading is wrong.",
+      "rule": "The description contains a caveat phrase: unless, except, excluding, does not include, not the same as, even if, only when.",
+      "heuristic": true
+    },
+    {
+      "part": "default_filter",
+      "applies_to": "column",
+      "sentence": "A description passes when it says which rows to include or exclude by default, and when to override that.",
+      "rule": "The description has a filter phrase (filter to, exclude, include only, by default) and an override phrase (unless, except when, only if).",
+      "heuristic": false
+    },
+    {
+      "part": "not_applicable",
+      "applies_to": "column",
+      "sentence": "A key column skips allowed values and default filter. It must still pass business meaning by saying what one row is and what the key joins to. A free-text column skips allowed values. Every other part applies to every column.",
+      "rule": "A key column (unique plus not_null tests, or a relationships test) skips allowed values and default filter. A free-text column (varchar with no accepted_values test) skips allowed values.",
+      "heuristic": false
+    },
+    {
+      "part": "table_grain",
+      "applies_to": "table",
+      "sentence": "A table description passes when it says what one row is.",
+      "rule": "The description contains a grain phrase: one row per, one row for each, each row, one record per.",
+      "heuristic": true
+    },
+    {
+      "part": "table_source",
+      "applies_to": "table",
+      "sentence": "A table description passes when it says where the data comes from.",
+      "rule": "The description contains a source phrase: sourced from, loaded from, built from, comes from, derived from, source system.",
+      "heuristic": true
+    },
+    {
+      "part": "table_scope",
+      "applies_to": "table",
+      "sentence": "A table description passes when it says what the table leaves out, or when to use a different table.",
+      "rule": "The description contains an exclusion or redirect phrase: excludes, excluding, does not include, only includes, instead, unless, except.",
+      "heuristic": true
+    }
+  ],
+  "pass_rates": {
+    "by_part": [
+      {
+        "part": "business_meaning",
+        "passed": 11,
+        "applicable": 27,
+        "rate": 41
+      },
+      {
+        "part": "allowed_values",
+        "passed": 9,
+        "applicable": 17,
+        "rate": 53
+      },
+      {
+        "part": "interpretation_guidance",
+        "passed": 0,
+        "applicable": 27,
+        "rate": 0
+      },
+      {
+        "part": "default_filter",
+        "passed": 0,
+        "applicable": 21,
+        "rate": 0
+      }
+    ],
+    "by_model": [
+      {
+        "model": "customers",
+        "passed": 5,
+        "applicable": 24,
+        "rate": 21
+      },
+      {
+        "model": "orders",
+        "passed": 15,
+        "applicable": 32,
+        "rate": 47
+      },
+      {
+        "model": "stg_customers",
+        "passed": 0,
+        "applicable": 8,
+        "rate": 0
+      },
+      {
+        "model": "stg_orders",
+        "passed": 0,
+        "applicable": 14,
+        "rate": 0
+      },
+      {
+        "model": "stg_payments",
+        "passed": 0,
+        "applicable": 14,
+        "rate": 0
+      }
+    ],
+    "table_parts": [
+      {
+        "part": "table_grain",
+        "passed": 0,
+        "applicable": 5,
+        "rate": 0
+      },
+      {
+        "part": "table_source",
+        "passed": 0,
+        "applicable": 5,
+        "rate": 0
+      },
+      {
+        "part": "table_scope",
+        "passed": 0,
+        "applicable": 5,
+        "rate": 0
+      }
+    ]
+  },
+  "drift": {
+    "undocumented_columns": [
+      "customers.customer_lifetime_value",
+      "stg_customers.customer_id",
+      "stg_customers.first_name",
+      "stg_customers.last_name",
+      "stg_orders.customer_id",
+      "stg_orders.order_date",
+      "stg_orders.order_id",
+      "stg_orders.status",
+      "stg_payments.amount",
+      "stg_payments.order_id",
+      "stg_payments.payment_id",
+      "stg_payments.payment_method"
+    ],
+    "stale_columns": [
+      "customers.total_order_amount"
+    ],
+    "undocumented_tables": [
+      "stg_customers",
+      "stg_orders",
+      "stg_payments"
+    ]
+  },
+  "tables": [
+    {
+      "model": "customers",
+      "status": "documented",
+      "description": "This table has basic information about a customer, as well as some derived facts based on a customer's orders",
+      "location": {
+        "path": "jaffle-shop/models/schema.yml",
+        "line": 4
+      },
+      "grades": {
+        "table_grain": {
+          "outcome": "fail",
+          "reason": "does not say what one row is"
+        },
+        "table_source": {
+          "outcome": "fail",
+          "reason": "does not say where the data comes from"
+        },
+        "table_scope": {
+          "outcome": "fail",
+          "reason": "does not say what the table leaves out or which table to use"
+        }
+      }
+    },
+    {
+      "model": "orders",
+      "status": "documented",
+      "description": "This table has basic information about orders, as well as some derived facts based on payments",
+      "location": {
+        "path": "jaffle-shop/models/schema.yml",
+        "line": 32
+      },
+      "grades": {
+        "table_grain": {
+          "outcome": "fail",
+          "reason": "does not say what one row is"
+        },
+        "table_source": {
+          "outcome": "fail",
+          "reason": "does not say where the data comes from"
+        },
+        "table_scope": {
+          "outcome": "fail",
+          "reason": "does not say what the table leaves out or which table to use"
+        }
+      }
+    },
+    {
+      "model": "stg_customers",
+      "status": "undocumented",
+      "description": "",
+      "location": {
+        "path": "jaffle-shop/models/staging/schema.yml",
+        "line": 4
+      },
+      "grades": {
+        "table_grain": {
+          "outcome": "fail",
+          "reason": "no description"
+        },
+        "table_source": {
+          "outcome": "fail",
+          "reason": "no description"
+        },
+        "table_scope": {
+          "outcome": "fail",
+          "reason": "no description"
+        }
+      }
+    },
+    {
+      "model": "stg_orders",
+      "status": "undocumented",
+      "description": "",
+      "location": {
+        "path": "jaffle-shop/models/staging/schema.yml",
+        "line": 11
+      },
+      "grades": {
+        "table_grain": {
+          "outcome": "fail",
+          "reason": "no description"
+        },
+        "table_source": {
+          "outcome": "fail",
+          "reason": "no description"
+        },
+        "table_scope": {
+          "outcome": "fail",
+          "reason": "no description"
+        }
+      }
+    },
+    {
+      "model": "stg_payments",
+      "status": "undocumented",
+      "description": "",
+      "location": {
+        "path": "jaffle-shop/models/staging/schema.yml",
+        "line": 23
+      },
+      "grades": {
+        "table_grain": {
+          "outcome": "fail",
+          "reason": "no description"
+        },
+        "table_source": {
+          "outcome": "fail",
+          "reason": "no description"
+        },
+        "table_scope": {
+          "outcome": "fail",
+          "reason": "no description"
+        }
+      }
+    }
+  ],
+  "columns": [
+    {
+      "model": "customers",
+      "column": "customer_id",
+      "status": "documented",
+      "pii": false,
+      "description": "This is a unique identifier for a customer",
+      "location": {
+        "path": "jaffle-shop/models/schema.yml",
+        "line": 8
+      },
+      "grades": {
+        "business_meaning": {
+          "outcome": "fail",
+          "reason": "key names no table it joins to"
+        },
+        "allowed_values": {
+          "outcome": "n/a",
+          "reason": ""
+        },
+        "interpretation_guidance": {
+          "outcome": "fail",
+          "reason": "names no case where the obvious reading is wrong"
+        },
+        "default_filter": {
+          "outcome": "n/a",
+          "reason": ""
+        }
+      }
+    },
+    {
+      "model": "customers",
+      "column": "customer_lifetime_value",
+      "status": "undocumented",
+      "pii": false,
+      "description": "",
+      "location": {
+        "path": "jaffle-shop/models/customers.sql",
+        "line": null
+      },
+      "grades": {
+        "business_meaning": {
+          "outcome": "fail",
+          "reason": "no description"
+        },
+        "allowed_values": {
+          "outcome": "fail",
+          "reason": "no description"
+        },
+        "interpretation_guidance": {
+          "outcome": "fail",
+          "reason": "no description"
+        },
+        "default_filter": {
+          "outcome": "fail",
+          "reason": "no description"
+        }
+      }
+    },
+    {
+      "model": "customers",
+      "column": "first_name",
+      "status": "documented",
+      "pii": true,
+      "description": "Customer's first name.",
+      "location": {
+        "path": "jaffle-shop/models/schema.yml",
+        "line": 14
+      },
+      "grades": {
+        "business_meaning": {
+          "outcome": "fail",
+          "reason": "adds fewer than 2 words to the column name"
+        },
+        "allowed_values": {
+          "outcome": "n/a",
+          "reason": ""
+        },
+        "interpretation_guidance": {
+          "outcome": "fail",
+          "reason": "names no case where the obvious reading is wrong"
+        },
+        "default_filter": {
+          "outcome": "fail",
+          "reason": "says no default rows to include or exclude"
+        }
+      }
+    },
+    {
+      "model": "customers",
+      "column": "first_order",
+      "status": "documented",
+      "pii": false,
+      "description": "Date (UTC) of a customer's first order",
+      "location": {
+        "path": "jaffle-shop/models/schema.yml",
+        "line": 20
+      },
+      "grades": {
+        "business_meaning": {
+          "outcome": "pass",
+          "reason": ""
+        },
+        "allowed_values": {
+          "outcome": "pass",
+          "reason": ""
+        },
+        "interpretation_guidance": {
+          "outcome": "fail",
+          "reason": "names no case where the obvious reading is wrong"
+        },
+        "default_filter": {
+          "outcome": "fail",
+          "reason": "says no default rows to include or exclude"
+        }
+      }
+    },
+    {
+      "model": "customers",
+      "column": "last_name",
+      "status": "documented",
+      "pii": true,
+      "description": "Customer's last name.",
+      "location": {
+        "path": "jaffle-shop/models/schema.yml",
+        "line": 17
+      },
+      "grades": {
+        "business_meaning": {
+          "outcome": "fail",
+          "reason": "adds fewer than 2 words to the column name"
+        },
+        "allowed_values": {
+          "outcome": "n/a",
+          "reason": ""
+        },
+        "interpretation_guidance": {
+          "outcome": "fail",
+          "reason": "names no case where the obvious reading is wrong"
+        },
+        "default_filter": {
+          "outcome": "fail",
+          "reason": "says no default rows to include or exclude"
+        }
+      }
+    },
+    {
+      "model": "customers",
+      "column": "most_recent_order",
+      "status": "documented",
+      "pii": false,
+      "description": "Date (UTC) of a customer's most recent order",
+      "location": {
+        "path": "jaffle-shop/models/schema.yml",
+        "line": 23
+      },
+      "grades": {
+        "business_meaning": {
+          "outcome": "pass",
+          "reason": ""
+        },
+        "allowed_values": {
+          "outcome": "pass",
+          "reason": ""
+        },
+        "interpretation_guidance": {
+          "outcome": "fail",
+          "reason": "names no case where the obvious reading is wrong"
+        },
+        "default_filter": {
+          "outcome": "fail",
+          "reason": "says no default rows to include or exclude"
+        }
+      }
+    },
+    {
+      "model": "customers",
+      "column": "number_of_orders",
+      "status": "documented",
+      "pii": false,
+      "description": "Count of the number of orders a customer has placed",
+      "location": {
+        "path": "jaffle-shop/models/schema.yml",
+        "line": 26
+      },
+      "grades": {
+        "business_meaning": {
+          "outcome": "pass",
+          "reason": ""
+        },
+        "allowed_values": {
+          "outcome": "fail",
+          "reason": "no unit or range, only a type"
+        },
+        "interpretation_guidance": {
+          "outcome": "fail",
+          "reason": "names no case where the obvious reading is wrong"
+        },
+        "default_filter": {
+          "outcome": "fail",
+          "reason": "says no default rows to include or exclude"
+        }
+      }
+    },
+    {
+      "model": "customers",
+      "column": "total_order_amount",
+      "status": "stale",
+      "pii": false,
+      "description": "Total value (AUD) of a customer's orders",
+      "location": {
+        "path": "jaffle-shop/models/schema.yml",
+        "line": 29
+      },
+      "grades": {}
+    },
+    {
+      "model": "orders",
+      "column": "amount",
+      "status": "documented",
+      "pii": false,
+      "description": "Total amount (AUD) of the order",
+      "location": {
+        "path": "jaffle-shop/models/schema.yml",
+        "line": 61
+      },
+      "grades": {
+        "business_meaning": {
+          "outcome": "pass",
+          "reason": ""
+        },
+        "allowed_values": {
+          "outcome": "pass",
+          "reason": ""
+        },
+        "interpretation_guidance": {
+          "outcome": "fail",
+          "reason": "names no case where the obvious reading is wrong"
+        },
+        "default_filter": {
+          "outcome": "fail",
+          "reason": "says no default rows to include or exclude"
+        }
+      }
+    },
+    {
+      "model": "orders",
+      "column": "bank_transfer_amount",
+      "status": "documented",
+      "pii": false,
+      "description": "Amount of the order (AUD) paid for by bank transfer",
+      "location": {
+        "path": "jaffle-shop/models/schema.yml",
+        "line": 76
+      },
+      "grades": {
+        "business_meaning": {
+          "outcome": "pass",
+          "reason": ""
+        },
+        "allowed_values": {
+          "outcome": "pass",
+          "reason": ""
+        },
+        "interpretation_guidance": {
+          "outcome": "fail",
+          "reason": "names no case where the obvious reading is wrong"
+        },
+        "default_filter": {
+          "outcome": "fail",
+          "reason": "says no default rows to include or exclude"
+        }
+      }
+    },
+    {
+      "model": "orders",
+      "column": "coupon_amount",
+      "status": "documented",
+      "pii": false,
+      "description": "Amount of the order (AUD) paid for by coupon",
+      "location": {
+        "path": "jaffle-shop/models/schema.yml",
+        "line": 71
+      },
+      "grades": {
+        "business_meaning": {
+          "outcome": "pass",
+          "reason": ""
+        },
+        "allowed_values": {
+          "outcome": "pass",
+          "reason": ""
+        },
+        "interpretation_guidance": {
+          "outcome": "fail",
+          "reason": "names no case where the obvious reading is wrong"
+        },
+        "default_filter": {
+          "outcome": "fail",
+          "reason": "says no default rows to include or exclude"
+        }
+      }
+    },
+    {
+      "model": "orders",
+      "column": "credit_card_amount",
+      "status": "documented",
+      "pii": false,
+      "description": "Amount of the order (AUD) paid for by credit card",
+      "location": {
+        "path": "jaffle-shop/models/schema.yml",
+        "line": 66
+      },
+      "grades": {
+        "business_meaning": {
+          "outcome": "pass",
+          "reason": ""
+        },
+        "allowed_values": {
+          "outcome": "pass",
+          "reason": ""
+        },
+        "interpretation_guidance": {
+          "outcome": "fail",
+          "reason": "names no case where the obvious reading is wrong"
+        },
+        "default_filter": {
+          "outcome": "fail",
+          "reason": "says no default rows to include or exclude"
+        }
+      }
+    },
+    {
+      "model": "orders",
+      "column": "customer_id",
+      "status": "documented",
+      "pii": false,
+      "description": "Foreign key to the customers table",
+      "location": {
+        "path": "jaffle-shop/models/schema.yml",
+        "line": 42
+      },
+      "grades": {
+        "business_meaning": {
+          "outcome": "pass",
+          "reason": ""
+        },
+        "allowed_values": {
+          "outcome": "n/a",
+          "reason": ""
+        },
+        "interpretation_guidance": {
+          "outcome": "fail",
+          "reason": "names no case where the obvious reading is wrong"
+        },
+        "default_filter": {
+          "outcome": "n/a",
+          "reason": ""
+        }
+      }
+    },
+    {
+      "model": "orders",
+      "column": "gift_card_amount",
+      "status": "documented",
+      "pii": false,
+      "description": "Amount of the order (AUD) paid for by gift card",
+      "location": {
+        "path": "jaffle-shop/models/schema.yml",
+        "line": 81
+      },
+      "grades": {
+        "business_meaning": {
+          "outcome": "pass",
+          "reason": ""
+        },
+        "allowed_values": {
+          "outcome": "pass",
+          "reason": ""
+        },
+        "interpretation_guidance": {
+          "outcome": "fail",
+          "reason": "names no case where the obvious reading is wrong"
+        },
+        "default_filter": {
+          "outcome": "fail",
+          "reason": "says no default rows to include or exclude"
+        }
+      }
+    },
+    {
+      "model": "orders",
+      "column": "order_date",
+      "status": "documented",
+      "pii": false,
+      "description": "Date (UTC) that the order was placed",
+      "location": {
+        "path": "jaffle-shop/models/schema.yml",
+        "line": 51
+      },
+      "grades": {
+        "business_meaning": {
+          "outcome": "pass",
+          "reason": ""
+        },
+        "allowed_values": {
+          "outcome": "pass",
+          "reason": ""
+        },
+        "interpretation_guidance": {
+          "outcome": "fail",
+          "reason": "names no case where the obvious reading is wrong"
+        },
+        "default_filter": {
+          "outcome": "fail",
+          "reason": "says no default rows to include or exclude"
+        }
+      }
+    },
+    {
+      "model": "orders",
+      "column": "order_id",
+      "status": "documented",
+      "pii": false,
+      "description": "This is a unique identifier for an order",
+      "location": {
+        "path": "jaffle-shop/models/schema.yml",
+        "line": 36
+      },
+      "grades": {
+        "business_meaning": {
+          "outcome": "fail",
+          "reason": "key names no table it joins to"
+        },
+        "allowed_values": {
+          "outcome": "n/a",
+          "reason": ""
+        },
+        "interpretation_guidance": {
+          "outcome": "fail",
+          "reason": "names no case where the obvious reading is wrong"
+        },
+        "default_filter": {
+          "outcome": "n/a",
+          "reason": ""
+        }
+      }
+    },
+    {
+      "model": "orders",
+      "column": "status",
+      "status": "documented",
+      "pii": false,
+      "description": "Orders can be one of the following statuses:\n\n| status code    | description                                                                                                            |\n|----------------|------------------------------------------------------------------------------------------------------------------------|\n| 10             | The order has been placed but has not yet left the warehouse                                                           |\n| 20             | The order has ben shipped to the customer and is currently in transit                                                  |\n| 30             | The order has been received by the customer                                                                            |\n| 40             | The customer has indicated that they would like to return the order, but it has not yet been received at the warehouse |\n| 50             | The order has been returned by the customer and received at the warehouse                                              |",
+      "location": {
+        "path": "jaffle-shop/models/docs.md",
+        "line": 1
+      },
+      "grades": {
+        "business_meaning": {
+          "outcome": "pass",
+          "reason": ""
+        },
+        "allowed_values": {
+          "outcome": "pass",
+          "reason": ""
+        },
+        "interpretation_guidance": {
+          "outcome": "fail",
+          "reason": "names no case where the obvious reading is wrong"
+        },
+        "default_filter": {
+          "outcome": "fail",
+          "reason": "says no default rows to include or exclude"
+        }
+      }
+    },
+    {
+      "model": "stg_customers",
+      "column": "customer_id",
+      "status": "undocumented",
+      "pii": false,
+      "description": "",
+      "location": {
+        "path": "jaffle-shop/models/staging/schema.yml",
+        "line": 6
+      },
+      "grades": {
+        "business_meaning": {
+          "outcome": "fail",
+          "reason": "no description"
+        },
+        "allowed_values": {
+          "outcome": "n/a",
+          "reason": ""
+        },
+        "interpretation_guidance": {
+          "outcome": "fail",
+          "reason": "no description"
+        },
+        "default_filter": {
+          "outcome": "n/a",
+          "reason": ""
+        }
+      }
+    },
+    {
+      "model": "stg_customers",
+      "column": "first_name",
+      "status": "undocumented",
+      "pii": false,
+      "description": "",
+      "location": {
+        "path": "jaffle-shop/models/staging/stg_customers.sql",
+        "line": null
+      },
+      "grades": {
+        "business_meaning": {
+          "outcome": "fail",
+          "reason": "no description"
+        },
+        "allowed_values": {
+          "outcome": "n/a",
+          "reason": ""
+        },
+        "interpretation_guidance": {
+          "outcome": "fail",
+          "reason": "no description"
+        },
+        "default_filter": {
+          "outcome": "fail",
+          "reason": "no description"
+        }
+      }
+    },
+    {
+      "model": "stg_customers",
+      "column": "last_name",
+      "status": "undocumented",
+      "pii": false,
+      "description": "",
+      "location": {
+        "path": "jaffle-shop/models/staging/stg_customers.sql",
+        "line": null
+      },
+      "grades": {
+        "business_meaning": {
+          "outcome": "fail",
+          "reason": "no description"
+        },
+        "allowed_values": {
+          "outcome": "n/a",
+          "reason": ""
+        },
+        "interpretation_guidance": {
+          "outcome": "fail",
+          "reason": "no description"
+        },
+        "default_filter": {
+          "outcome": "fail",
+          "reason": "no description"
+        }
+      }
+    },
+    {
+      "model": "stg_orders",
+      "column": "customer_id",
+      "status": "undocumented",
+      "pii": false,
+      "description": "",
+      "location": {
+        "path": "jaffle-shop/models/staging/stg_orders.sql",
+        "line": null
+      },
+      "grades": {
+        "business_meaning": {
+          "outcome": "fail",
+          "reason": "no description"
+        },
+        "allowed_values": {
+          "outcome": "fail",
+          "reason": "no description"
+        },
+        "interpretation_guidance": {
+          "outcome": "fail",
+          "reason": "no description"
+        },
+        "default_filter": {
+          "outcome": "fail",
+          "reason": "no description"
+        }
+      }
+    },
+    {
+      "model": "stg_orders",
+      "column": "order_date",
+      "status": "undocumented",
+      "pii": false,
+      "description": "",
+      "location": {
+        "path": "jaffle-shop/models/staging/stg_orders.sql",
+        "line": null
+      },
+      "grades": {
+        "business_meaning": {
+          "outcome": "fail",
+          "reason": "no description"
+        },
+        "allowed_values": {
+          "outcome": "fail",
+          "reason": "no description"
+        },
+        "interpretation_guidance": {
+          "outcome": "fail",
+          "reason": "no description"
+        },
+        "default_filter": {
+          "outcome": "fail",
+          "reason": "no description"
+        }
+      }
+    },
+    {
+      "model": "stg_orders",
+      "column": "order_id",
+      "status": "undocumented",
+      "pii": false,
+      "description": "",
+      "location": {
+        "path": "jaffle-shop/models/staging/schema.yml",
+        "line": 13
+      },
+      "grades": {
+        "business_meaning": {
+          "outcome": "fail",
+          "reason": "no description"
+        },
+        "allowed_values": {
+          "outcome": "n/a",
+          "reason": ""
+        },
+        "interpretation_guidance": {
+          "outcome": "fail",
+          "reason": "no description"
+        },
+        "default_filter": {
+          "outcome": "n/a",
+          "reason": ""
+        }
+      }
+    },
+    {
+      "model": "stg_orders",
+      "column": "status",
+      "status": "undocumented",
+      "pii": false,
+      "description": "",
+      "location": {
+        "path": "jaffle-shop/models/staging/schema.yml",
+        "line": 17
+      },
+      "grades": {
+        "business_meaning": {
+          "outcome": "fail",
+          "reason": "no description"
+        },
+        "allowed_values": {
+          "outcome": "fail",
+          "reason": "no description"
+        },
+        "interpretation_guidance": {
+          "outcome": "fail",
+          "reason": "no description"
+        },
+        "default_filter": {
+          "outcome": "fail",
+          "reason": "no description"
+        }
+      }
+    },
+    {
+      "model": "stg_payments",
+      "column": "amount",
+      "status": "undocumented",
+      "pii": false,
+      "description": "",
+      "location": {
+        "path": "jaffle-shop/models/staging/stg_payments.sql",
+        "line": null
+      },
+      "grades": {
+        "business_meaning": {
+          "outcome": "fail",
+          "reason": "no description"
+        },
+        "allowed_values": {
+          "outcome": "fail",
+          "reason": "no description"
+        },
+        "interpretation_guidance": {
+          "outcome": "fail",
+          "reason": "no description"
+        },
+        "default_filter": {
+          "outcome": "fail",
+          "reason": "no description"
+        }
+      }
+    },
+    {
+      "model": "stg_payments",
+      "column": "order_id",
+      "status": "undocumented",
+      "pii": false,
+      "description": "",
+      "location": {
+        "path": "jaffle-shop/models/staging/stg_payments.sql",
+        "line": null
+      },
+      "grades": {
+        "business_meaning": {
+          "outcome": "fail",
+          "reason": "no description"
+        },
+        "allowed_values": {
+          "outcome": "fail",
+          "reason": "no description"
+        },
+        "interpretation_guidance": {
+          "outcome": "fail",
+          "reason": "no description"
+        },
+        "default_filter": {
+          "outcome": "fail",
+          "reason": "no description"
+        }
+      }
+    },
+    {
+      "model": "stg_payments",
+      "column": "payment_id",
+      "status": "undocumented",
+      "pii": false,
+      "description": "",
+      "location": {
+        "path": "jaffle-shop/models/staging/schema.yml",
+        "line": 25
+      },
+      "grades": {
+        "business_meaning": {
+          "outcome": "fail",
+          "reason": "no description"
+        },
+        "allowed_values": {
+          "outcome": "n/a",
+          "reason": ""
+        },
+        "interpretation_guidance": {
+          "outcome": "fail",
+          "reason": "no description"
+        },
+        "default_filter": {
+          "outcome": "n/a",
+          "reason": ""
+        }
+      }
+    },
+    {
+      "model": "stg_payments",
+      "column": "payment_method",
+      "status": "undocumented",
+      "pii": false,
+      "description": "",
+      "location": {
+        "path": "jaffle-shop/models/staging/schema.yml",
+        "line": 29
+      },
+      "grades": {
+        "business_meaning": {
+          "outcome": "fail",
+          "reason": "no description"
+        },
+        "allowed_values": {
+          "outcome": "fail",
+          "reason": "no description"
+        },
+        "interpretation_guidance": {
+          "outcome": "fail",
+          "reason": "no description"
+        },
+        "default_filter": {
+          "outcome": "fail",
+          "reason": "no description"
+        }
+      }
+    }
+  ]
+}
