@@ -1,0 +1,99 @@
+{
+  "docs": "docs_weak",
+  "docs_commit": "b5b821d",
+  "questions_commit": "335d6b2",
+  "model": "claude-sonnet-5-5",
+  "context": "Table customers\n- customer_id (INTEGER)\n- first_name (VARCHAR)\n- last_name (VARCHAR)\n- first_order (DATE)\n- most_recent_order (DATE)\n- number_of_orders (BIGINT)\n- customer_lifetime_value (DOUBLE)\n\nTable orders\n- order_id (INTEGER)\n- customer_id (INTEGER)\n- order_date (DATE)\n- status (VARCHAR)\n- credit_card_amount (DOUBLE)\n- coupon_amount (DOUBLE)\n- bank_transfer_amount (DOUBLE)\n- gift_card_amount (DOUBLE)\n- amount (DOUBLE)\n",
+  "results": [
+    {
+      "id": "p1",
+      "group": "context",
+      "question": "How many orders are currently in transit to the customer?",
+      "sql": "SELECT COUNT(*) AS orders_in_transit\nFROM orders\nWHERE status = 'shipped';",
+      "expected": [
+        [
+          13
+        ]
+      ],
+      "actual": [
+        [
+          0
+        ]
+      ],
+      "error": null,
+      "outcome": "fail"
+    },
+    {
+      "id": "p2",
+      "group": "context",
+      "question": "What is our net revenue?",
+      "sql": "SELECT SUM(amount - coupon_amount) AS net_revenue\nFROM orders\nWHERE status NOT IN ('returned', 'return_pending');",
+      "expected": [
+        [
+          1585.0
+        ]
+      ],
+      "actual": [
+        [
+          1487.0
+        ]
+      ],
+      "error": null,
+      "outcome": "fail"
+    },
+    {
+      "id": "p3",
+      "group": "context",
+      "question": "How many active customers do we have?",
+      "sql": "-- \"Active\" is not defined in the schema, so this assumes an active customer is one who has placed at least one order.\nSELECT COUNT(*) AS active_customers\nFROM customers\nWHERE number_of_orders > 0;",
+      "expected": [
+        [
+          30
+        ]
+      ],
+      "actual": [
+        [
+          62
+        ]
+      ],
+      "error": null,
+      "outcome": "fail"
+    },
+    {
+      "id": "c1",
+      "group": "control",
+      "question": "How many customers have placed more than 3 orders?",
+      "sql": "SELECT COUNT(*) AS customer_count\nFROM customers\nWHERE number_of_orders > 3;",
+      "expected": [
+        [
+          1
+        ]
+      ],
+      "actual": [
+        [
+          1
+        ]
+      ],
+      "error": null,
+      "outcome": "pass"
+    },
+    {
+      "id": "c2",
+      "group": "control",
+      "question": "What is the total amount paid by gift card across all orders?",
+      "sql": "SELECT SUM(gift_card_amount) AS total_gift_card_amount\nFROM orders;",
+      "expected": [
+        [
+          205.0
+        ]
+      ],
+      "actual": [
+        [
+          205.0
+        ]
+      ],
+      "error": null,
+      "outcome": "pass"
+    }
+  ]
+}

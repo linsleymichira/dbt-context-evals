@@ -104,11 +104,12 @@ def ask(client, model, context, question):
     )
     response = client.messages.create(
         model=model,
-        max_tokens=400,
+        max_tokens=1000,
         messages=[{"role": "user", "content": prompt}],
     )
     text = "".join(b.text for b in response.content if b.type == "text")
-    match = re.search(r"```sql\s*(.*?)```", text, flags=re.S)
+    # An unclosed fence still counts: take everything after ```sql.
+    match = re.search(r"```sql\s*(.*?)(?:```|$)", text, flags=re.S)
     return (match.group(1) if match else text).strip()
 
 
