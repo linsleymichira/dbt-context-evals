@@ -1,0 +1,32 @@
+# Pilot only, step 6 of the build plan. NOT the frozen question set.
+# The frozen set is questions.yml at the repo root, written by the user in step 7.
+# context: the answer depends on a fact names alone do not give.
+# control: the column names alone should be enough.
+questions:
+  - id: p1
+    group: context
+    question: How many orders are currently in transit to the customer?
+    hidden_fact: "'In transit' is status 'shipped' (orders_status doc)."
+    golden_sql: select count(*) from orders where status = 'shipped'
+
+  - id: p2
+    group: context
+    question: How many orders has the warehouse received back from customers?
+    hidden_fact: Received back at the warehouse is status 'returned', not 'return_pending'.
+    golden_sql: select count(*) from orders where status = 'returned'
+
+  - id: p3
+    group: context
+    question: How many orders is the warehouse still waiting to receive back after the customer asked to return them?
+    hidden_fact: Asked to return but not yet received is status 'return_pending'.
+    golden_sql: select count(*) from orders where status = 'return_pending'
+
+  - id: c1
+    group: control
+    question: How many customers have placed more than 3 orders?
+    golden_sql: select count(*) from customers where number_of_orders > 3
+
+  - id: c2
+    group: control
+    question: What is the total amount paid by gift card across all orders?
+    golden_sql: select sum(gift_card_amount) from orders
